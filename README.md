@@ -64,7 +64,6 @@ Fix up the SSL/bearer token configuration for Prometheus dynamic queries
 -
 The current prometheus configuration for aggregation of inventory queries is incorrectly configured because it is missing the bearer_token configuration line.  Without the bearer token the queries cannot be executed for aggregation.
 
-
     Login as root
 
     $ cd /usr/local/etc/filewave/prometheus
@@ -93,12 +92,28 @@ Make darn sure you have an SSL certificate, it must be valid, trusted by everyon
 
 Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
 
+
+Checking how long since check in
+-
+Something like this should help: 
+
+    select u.name, u.id, i.last_check_in, now()::date - i.last_check_in::date how_old, dc.filewave_model_number, i.id from admin.user_clone_group u, public.generic_genericclient i, public.generic_genericdesktopclient dc where u.id = i.filewave_id and i.id = dc.genericclient_ptr_id;
+
+The above statement produces: 
+
+```sql
+   name   | id  |         last_check_in         | how_old | filewave_model_number | id 
+---------+-----+-------------------------------+---------+-----------------------+----
+ hades   | 227 | 2020-03-01 17:58:27.211223+00 |       8 |                    23 |  3
+ mini    | 223 | 2020-03-09 11:28:02.645236+00 |       0 |                    25 |  1
+ TinyAir | 243 | 2020-03-09 11:28:10.569433+00 |       0 |                    25 |  4
+```
+
 Install the virtualenv and Python script on the server
 -
 This system should be running on the server.  It'll collect interesting information into a bunch of metrics allowing some of the panels to be created; the first use case for this was the PostgreSQL query used to calc the number of days since a device last checked in.  In this case we don't want to suck each device out of the server just to calculate a number - especially not a nice solution when there are 1000's of devices.
 
 Installation instructions for the python module.
-
 
     $ virtualenv env
     $ source env/bin/activate
