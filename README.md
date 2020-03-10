@@ -4,15 +4,17 @@ Useful Dashboard Info
 The purpose is to inject queries and configuration into a Dashboard capable FileWave installation.
 
 The motivator was Alex Fredlake's request for the following types of visualizations:
-1. Chart of different OS types and how many you have of each
-2. Chart of last time devices have checked in. (last 24 hours, last 7 days, last month, longer) 
+1. [DONE] Chart of different OS types and how many you have of each
+2. [DONE] Chart of last time devices have checked in. (last 24 hours, last 7 days, last month, longer) 
 3. Chart of what model of devices (What windows product models you have and number of each) 
-4. Windows OS types, ( Chart of how many on each type of build) 
+4. [DONE] Windows OS types, ( Chart of how many on each type of build) 
 5. How many of each macOS, Android, iOS version. table for each
 6. Chart based on last Windows security update window. (Show how frequently your devices have pulled software updates, in a time frame window like 2)
 7. How many devices have location enabled 
 8. How many devices have Office installed, and what version. 
-9. Devices with high usability, vs low usability (maybe something with login time and application usage). 
+9. Devices with high usability, vs low usability (maybe something with login time and application usage).
+10. Who is online now? Client devices - it's useful to know if I can work with the device right now.  Is a particular [smart] group online now?  This is OK to be restricted to remote devices, e.g. when doing remote control to know that this will/should work?
+11. The list of outstanding fileset deployment delays. 
 
 The visualizations require data collection (inventory queries), aggregation of some sort and a dashboard panel.
 
@@ -85,6 +87,23 @@ The current prometheus configuration for aggregation of inventory queries is inc
 
     To validate that this worked; use http://localhost:21090/targets and ensure that the target called extra-config-https is blue.  If it is red; then something went wrong. 
 
+
+Add in a job to scrap the Python metrics we're about to run
+-
+The following configuration step will be auto discovered & loaded - there is no need to restart any server.  Write the following text to a file called:
+
+> /usr/local/etc/filewave/prometheus/conf.d/jobs/http/histo.yml
+
+```yaml
+- targets: ['localhost:8000']
+  labels:
+    purpose: "checkin"
+```
+
+To check this has been added correctly; go into the Prometheus targets section on `http://localhost:21090/targets` and look for the extra-config-http configuration you just added.
+
+In the last column of the targets display you should see an error as shown below - because the server hasn't been started yet: 
+> Get http://localhost:8000/metrics: dial tcp [::1]:8000: connect: connection refused
 
 Don't skip this - SSL Certs
 -
