@@ -1,2 +1,4 @@
 requests==2.23.0
 prometheus_client==0.7.1
+psycopg2-binary==2.8.4
+PyYAML==5.3

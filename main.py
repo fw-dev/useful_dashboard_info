@@ -17,6 +17,11 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 should_fix = False
+fw_host = os.getenv('FW_PG_HOSTNAME', 'localhost')
+fw_port = os.getenv('FW_PG_PORT', 9432)
+fw_dbname = os.getenv('FW_PG_DBNAME', 'mdm')
+fw_dbuser = os.getenv('FW_PG_USERNAME', 'django')
+fw_dbpwd = os.getenv('FW_PG_PASSWORD', None)
 
 def p_ok(msg):
     print(bcolors.OKGREEN, msg, bcolors.ENDC)
@@ -31,8 +36,9 @@ collect_statement = "select u.name, u.id, i.last_check_in, now()::date - i.last_
 
 # this task will run every minute
 def collect_postgres_information():
-    try:       
-        conn = psycopg2.connect(host="localhost", port=9432, database="mdm", user="django")
+    try:
+        conn = psycopg2.connect(host=fw_host, port=fw_port, database="mdm", user="django")
+
         cur = conn.cursor()
         cur.execute(collect_statement)
         rows = cur.fetchall()
