@@ -138,4 +138,3 @@ Installation instructions for the python module.
     $ source env/bin/activate
     $ pip install fw-dashboard-extras
     
-
