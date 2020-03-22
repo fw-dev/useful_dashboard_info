@@ -19,6 +19,7 @@ for b in range(1, observations):
 if __name__ == "__main__":
     # Serve these stats...
     start_http_server(8000)
+    # This was made in a container.
 
     while(True):
         m.observe(random.randint(1, MINS_PER_DAY * 40))
