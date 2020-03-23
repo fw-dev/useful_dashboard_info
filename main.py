@@ -1,10 +1,12 @@
 from prometheus_client import start_http_server, Histogram, Gauge
 import argparse
-import psycopg2, yaml
+import yaml
 import random
+import requests
 import time
 import sys
 import os
+import psycopg2
 
 class bcolors:
     HEADER = '\033[95m'
@@ -17,7 +19,9 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 should_fix = False
-fw_host = os.getenv('FW_PG_HOSTNAME', 'localhost')
+fw_auth = 'e2VlNjJjYTU1LTAzNDMtNDQ2ZS04ODJkLTQwYTE1Nzg2MzQ1MX0='
+
+fw_host = os.getenv('FW_PG_HOSTNAME', '192.168.178.67')
 fw_port = os.getenv('FW_PG_PORT', 9432)
 fw_dbname = os.getenv('FW_PG_DBNAME', 'mdm')
 fw_dbuser = os.getenv('FW_PG_USERNAME', 'django')
@@ -35,8 +39,10 @@ collect_statement = "select u.name, u.id, i.last_check_in, now()::date - i.last_
         " WHERE u.id = i.filewave_id "
 
 # this task will run every minute
-def collect_postgres_information():
+def collect_mdm_information():
     try:
+        pass
+        
         conn = psycopg2.connect(host=fw_host, port=fw_port, database="mdm", user="django")
 
         cur = conn.cursor()
@@ -68,7 +74,7 @@ def collect_postgres_information():
             print("stats collected - used %d rows: buckets: %s", (cur.rowcount, buckets))
             conn.close()
     except Exception as reason: # for any reason...
-        print("Failed to collect info from the postgres database - aborting for now: ", reason)
+        print("Failed to collect info from the MDM system - aborting: ", reason)
 
 
 def validate_server_installation():
@@ -96,9 +102,10 @@ def validate_server_installation():
                     item[token_key] = './conf.d/bearer_token_file'
                     p_fail("%s is NOT present in the config - FAILED" % (token_key,))
 
-    if fixes == 1:
-        yaml.dump(prom_config, file, sort_keys=False)
-        print("Re-wrote the prometheus configuration at %s" % (prom_config_path,))
+    if fixes == 1 and should_fix:
+        with open(prom_config_path, 'w') as file:
+            yaml.dump(prom_config, file, sort_keys=False)
+            print("Re-wrote the prometheus configuration at %s" % (prom_config_path,))
 
 
     # ok, do we have the job that ensures prometheus will call us? 
@@ -107,8 +114,7 @@ def validate_server_installation():
         p_fail("%s is NOT present on disk - which means prometheus won't scrape this process - FAILED" % (our_prom_config_file,))
     else:
         p_ok("our prometheus configuration appears to be on disk - pass")
-
-    
+ 
 
     # does the main fwxserver model version have the right spec? 
     grep_command = "grep filewave_model_version /usr/local/etc/filewave/grafana/provisioning/dashboards/FileWave-Main.json | grep fwxserver-admin"
@@ -131,7 +137,7 @@ def serve_and_process():
 
     try:
         while(True):
-            collect_postgres_information()
+            collect_mdm_information()
             time.sleep(30)
     except:
         print("Closing...")

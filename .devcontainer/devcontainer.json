@@ -1,13 +1,13 @@
 // For format details, see https://aka.ms/vscode-remote/devcontainer.json or this file's README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.106.0/containers/docker-existing-dockerfile
 {
-	"name": "Existing Dockerfile",
+	"name": "Local Container (for Python)",
 
 	// Sets the run context to one level up instead of the .devcontainer folder.
 	"context": "..",
 
 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	"dockerFile": "..\\Dockerfile",
+	"dockerFile": "../Dockerfile",
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
@@ -15,7 +15,7 @@
 		"python.pythonPath": "/usr/local/bin/python",
 		"python.linting.enabled": true,
 		"python.linting.pylintEnabled": true,
-		"python.linting.pylintPath": "/usr/local/share/pip-global/bin/pylint"
+		"python.linting.pylintPath": "/usr/local/bin/pylint"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
@@ -37,6 +37,6 @@
 	// "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
 
 	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "vscode",
+	//"remoteUser": "vscode",
 	//"containerUser": "vscode"
 }
