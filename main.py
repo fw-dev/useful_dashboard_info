@@ -2,11 +2,13 @@ from prometheus_client import start_http_server, Histogram, Gauge
 import argparse
 import yaml
 import random
-import requests
 import time
 import sys
 import os
-import psycopg2
+import requests
+
+from rest import FWRestRequestor
+from queries import query_client_info
 
 class bcolors:
     HEADER = '\033[95m'
@@ -19,13 +21,11 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 should_fix = False
-fw_auth = 'e2VlNjJjYTU1LTAzNDMtNDQ2ZS04ODJkLTQwYTE1Nzg2MzQ1MX0='
+fw_hostname = 'fwsrv.cluster8.tech'
+fw_inv_auth = 'e2VlNjJjYTU1LTAzNDMtNDQ2ZS04ODJkLTQwYTE1Nzg2MzQ1MX0='
 
-fw_host = os.getenv('FW_PG_HOSTNAME', '192.168.178.67')
-fw_port = os.getenv('FW_PG_PORT', 9432)
-fw_dbname = os.getenv('FW_PG_DBNAME', 'mdm')
-fw_dbuser = os.getenv('FW_PG_USERNAME', 'django')
-fw_dbpwd = os.getenv('FW_PG_PASSWORD', None)
+fw_url_runquery = 'https://' + fw_hostname + ':20445/inv/api/v1/query_result/'
+fw_auth_headers = { 'Authorization': fw_inv_auth, 'Content-Type': 'application/json' }
 
 def p_ok(msg):
     print(bcolors.OKGREEN, msg, bcolors.ENDC)
@@ -34,47 +34,51 @@ def p_fail(msg):
 
 client_checkin_duration_days = Gauge('device_checkin_days', 'the number of days elapsed since a device checked in', ["days",])
 
-collect_statement = "select u.name, u.id, i.last_check_in, now()::date - i.last_check_in::date how_old, " \
-        "i.id from admin.user_clone_group u, public.generic_genericclient i " \
-        " WHERE u.id = i.filewave_id "
+# collect_statement = "select u.name, u.id, i.last_check_in, now()::date - i.last_check_in::date how_old, " \
+#         "i.id from admin.user_clone_group u, public.generic_genericclient i " \
+#         " WHERE u.id = i.filewave_id "
+
+def collect_client_data():
+    r = requests.post(fw_url_runquery, headers=fw_auth_headers, data=query_client_info)
+
 
 # this task will run every minute
-def collect_mdm_information():
-    try:
-        pass
+# def collect_via_pg():
+#     try:
+#         pass
         
-        conn = psycopg2.connect(host=fw_host, port=fw_port, database="mdm", user="django")
+#         conn = psycopg2.connect(host=fw_host, port=fw_port, database="mdm", user="django")
 
-        cur = conn.cursor()
-        cur.execute(collect_statement)
-        rows = cur.fetchall()
+#         cur = conn.cursor()
+#         cur.execute(collect_statement)
+#         rows = cur.fetchall()
 
-        # print("got %d rows" % (cur.rowcount))
-        buckets = [0, 0, 0, 0]
+#         # print("got %d rows" % (cur.rowcount))
+#         buckets = [0, 0, 0, 0]
         
-        for row in rows:
-            # print(row)
+#         for row in rows:
+#             # print(row)
 
-            checkin_days = row[3]
-            if(checkin_days <= 1):
-                buckets[0] += 1
-            elif checkin_days <= 7:
-                buckets[1] += 1
-            elif checkin_days <= 30:
-                buckets[2] += 1
-            else:
-                buckets[3] += 1
+#             checkin_days = row[3]
+#             if(checkin_days <= 1):
+#                 buckets[0] += 1
+#             elif checkin_days <= 7:
+#                 buckets[1] += 1
+#             elif checkin_days <= 30:
+#                 buckets[2] += 1
+#             else:
+#                 buckets[3] += 1
 
-            client_checkin_duration_days.labels('Less than 1').set(buckets[0])
-            client_checkin_duration_days.labels('Less than 7').set(buckets[1])
-            client_checkin_duration_days.labels('Less than 30').set(buckets[2])
-            client_checkin_duration_days.labels('More than 30').set(buckets[3])
+#             client_checkin_duration_days.labels('Less than 1').set(buckets[0])
+#             client_checkin_duration_days.labels('Less than 7').set(buckets[1])
+#             client_checkin_duration_days.labels('Less than 30').set(buckets[2])
+#             client_checkin_duration_days.labels('More than 30').set(buckets[3])
 
-        if conn is not None:
-            print("stats collected - used %d rows: buckets: %s", (cur.rowcount, buckets))
-            conn.close()
-    except Exception as reason: # for any reason...
-        print("Failed to collect info from the MDM system - aborting: ", reason)
+#         if conn is not None:
+#             print("stats collected - used %d rows: buckets: %s", (cur.rowcount, buckets))
+#             conn.close()
+#     except Exception as reason: # for any reason...
+#         print("Failed to collect info from the MDM system - aborting: ", reason)
 
 
 def validate_server_installation():
@@ -137,7 +141,8 @@ def serve_and_process():
 
     try:
         while(True):
-            collect_mdm_information()
+            # collect_via_pg()
+            collect_client_data()
             time.sleep(30)
     except:
         print("Closing...")
