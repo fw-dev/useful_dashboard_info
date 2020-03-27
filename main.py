@@ -4,7 +4,7 @@ import yaml
 import random
 import time
 import sys
-import os
+import os, datetime
 import requests
 
 from rest import FWRestRequestor
@@ -34,51 +34,42 @@ def p_fail(msg):
 
 client_checkin_duration_days = Gauge('device_checkin_days', 'the number of days elapsed since a device checked in', ["days",])
 
-# collect_statement = "select u.name, u.id, i.last_check_in, now()::date - i.last_check_in::date how_old, " \
-#         "i.id from admin.user_clone_group u, public.generic_genericclient i " \
-#         " WHERE u.id = i.filewave_id "
-
 def collect_client_data():
     r = requests.post(fw_url_runquery, headers=fw_auth_headers, data=query_client_info)
+    j = r.json()
 
+    try:
+        assert j["fields"]
+        assert j["fields"][6] == "Client_last_check_in", "field 6 is expected to be the Client's last check in date/time"
 
-# this task will run every minute
-# def collect_via_pg():
-#     try:
-#         pass
-        
-#         conn = psycopg2.connect(host=fw_host, port=fw_port, database="mdm", user="django")
+        buckets = [0, 0, 0, 0]
+        now = datetime.datetime.now()
 
-#         cur = conn.cursor()
-#         cur.execute(collect_statement)
-#         rows = cur.fetchall()
+        for v in j["values"]:
+            # it's all a bit reliant on knowing what the query was at this point, the way we return data
+            # from FW isn't really JSON standard.           
+            checkin_date = datetime.datetime.strptime(v[6], '%Y-%m-%dT%H:%M:%S.%fZ')
+            delta = now - checkin_date
 
-#         # print("got %d rows" % (cur.rowcount))
-#         buckets = [0, 0, 0, 0]
-        
-#         for row in rows:
-#             # print(row)
+            # print("checkin days:", v[0], delta.days)
 
-#             checkin_days = row[3]
-#             if(checkin_days <= 1):
-#                 buckets[0] += 1
-#             elif checkin_days <= 7:
-#                 buckets[1] += 1
-#             elif checkin_days <= 30:
-#                 buckets[2] += 1
-#             else:
-#                 buckets[3] += 1
+            checkin_days = delta.days
+            if(checkin_days <= 1):
+                buckets[0] += 1
+            elif checkin_days <= 7:
+                buckets[1] += 1
+            elif checkin_days <= 30:
+                buckets[2] += 1
+            else:
+                buckets[3] += 1
 
-#             client_checkin_duration_days.labels('Less than 1').set(buckets[0])
-#             client_checkin_duration_days.labels('Less than 7').set(buckets[1])
-#             client_checkin_duration_days.labels('Less than 30').set(buckets[2])
-#             client_checkin_duration_days.labels('More than 30').set(buckets[3])
+        client_checkin_duration_days.labels('Less than 1').set(buckets[0])
+        client_checkin_duration_days.labels('Less than 7').set(buckets[1])
+        client_checkin_duration_days.labels('Less than 30').set(buckets[2])
+        client_checkin_duration_days.labels('More than 30').set(buckets[3])
 
-#         if conn is not None:
-#             print("stats collected - used %d rows: buckets: %s", (cur.rowcount, buckets))
-#             conn.close()
-#     except Exception as reason: # for any reason...
-#         print("Failed to collect info from the MDM system - aborting: ", reason)
+    except AssertionError as e1:
+        print("The validation/assertions failed: %s" % (e1,))
 
 
 def validate_server_installation():
@@ -141,7 +132,6 @@ def serve_and_process():
 
     try:
         while(True):
-            # collect_via_pg()
             collect_client_data()
             time.sleep(30)
     except:

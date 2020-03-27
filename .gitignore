@@ -1,4 +1,4 @@
 env/**
-
-__pycache__/main.cpython-37.pyc
+__pycache__/**
 .DS_Store
+
