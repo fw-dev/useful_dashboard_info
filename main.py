@@ -51,7 +51,7 @@ def collect_client_data():
             checkin_date = datetime.datetime.strptime(v[6], '%Y-%m-%dT%H:%M:%S.%fZ')
             delta = now - checkin_date
 
-            # print("checkin days:", v[0], delta.days)
+            print("checkin days:", v[0], delta.days)
 
             checkin_days = delta.days
             if(checkin_days <= 1):
@@ -134,8 +134,8 @@ def serve_and_process():
         while(True):
             collect_client_data()
             time.sleep(30)
-    except:
-        print("Closing...")
+    except Exception as e:
+        print("Closing...", e)
 
 
 if __name__ == "__main__":
