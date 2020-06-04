@@ -7,8 +7,8 @@ import sys
 import os, datetime
 import requests
 
-from rest import FWRestRequestor
-from queries import query_client_info
+# from rest import FWRestRequestor
+from queries import query_client_info, query_software_patches
 
 class bcolors:
     HEADER = '\033[95m'
@@ -20,9 +20,9 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-should_fix = False
+# should_fix = False
 fw_hostname = 'fwsrv.cluster8.tech'
-fw_inv_auth = 'e2VlNjJjYTU1LTAzNDMtNDQ2ZS04ODJkLTQwYTE1Nzg2MzQ1MX0='
+fw_inv_auth = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
 
 fw_url_runquery = 'https://' + fw_hostname + ':20445/inv/api/v1/query_result/'
 fw_auth_headers = { 'Authorization': fw_inv_auth, 'Content-Type': 'application/json' }
@@ -32,7 +32,37 @@ def p_ok(msg):
 def p_fail(msg):
     print(bcolors.FAIL, msg, bcolors.ENDC)
 
+software_patches = Gauge('software_patches_by_critical', 'list of the outstanding software patches', ["name", "is_critical"])
 client_checkin_duration_days = Gauge('device_checkin_days', 'the number of days elapsed since a device checked in', ["days",])
+
+def collect_patch_data():
+    r = requests.post(fw_url_runquery, headers=fw_auth_headers, data=query_software_patches)
+    j = r.json()
+    try:
+        # summary by patch/criticality
+
+        assert j["fields"]
+        assert j["fields"][2] == "Update_name", "field is expected to be the the name of the Update"
+
+        crit_updates = dict()
+        normal_updates = dict()
+
+        for v in j["values"]:
+            update_name = v[2]
+            is_critical = v[6]
+
+            if is_critical:
+                crit_updates[update_name] = 1 if not update_name in crit_updates else crit_updates[update_name] + 1
+            else:
+                normal_updates[update_name] = 1 if not update_name in normal_updates else normal_updates[update_name] + 1
+    
+        for k,v in crit_updates.items():
+            software_patches.labels(k, True).set(v)
+        for k,v in normal_updates.items():
+            software_patches.labels(k, False).set(v)
+
+    except AssertionError as e1:
+        print("The validation/assertions failed: %s" % (e1,))    
 
 def collect_client_data():
     r = requests.post(fw_url_runquery, headers=fw_auth_headers, data=query_client_info)
@@ -48,11 +78,10 @@ def collect_client_data():
         for v in j["values"]:
             # it's all a bit reliant on knowing what the query was at this point, the way we return data
             # from FW isn't really JSON standard.           
+            print(v[6])
             checkin_date = datetime.datetime.strptime(v[6], '%Y-%m-%dT%H:%M:%S.%fZ')
             delta = now - checkin_date
-
             print("checkin days:", v[0], delta.days)
-
             checkin_days = delta.days
             if(checkin_days <= 1):
                 buckets[0] += 1
@@ -72,57 +101,6 @@ def collect_client_data():
         print("The validation/assertions failed: %s" % (e1,))
 
 
-def validate_server_installation():
-    # can we write/access the configuration for prometheus? 
-    prom_config_path = os.path.join("/usr/local/etc/filewave/prometheus/", "prometheus.yml")    
-    if not os.access(prom_config_path, os.W_OK):
-        raise Exception("I don't seem to be able to write to %s, aborting..." % (prom_config_path,))
-
-    fixes = 0
-    prom_config = None
-
-    # does the prometheus.yml file contain the bearer token reference in the extra-config-https section? 
-    with open(prom_config_path, 'r') as file:
-        token_key = 'bearer_token_file'
-        prom_config = yaml.safe_load(file)
-        for item in prom_config['scrape_configs']:
-            job_name = item['job_name']
-            if job_name == 'extra-config-https':
-                try:
-                    bearer_token = item[token_key]
-                    # oh, it's there - excellent...
-                    p_ok("Key %s present in config with value: %s - pass" % (token_key, bearer_token))
-                except KeyError:
-                    fixes += 1
-                    item[token_key] = './conf.d/bearer_token_file'
-                    p_fail("%s is NOT present in the config - FAILED" % (token_key,))
-
-    if fixes == 1 and should_fix:
-        with open(prom_config_path, 'w') as file:
-            yaml.dump(prom_config, file, sort_keys=False)
-            print("Re-wrote the prometheus configuration at %s" % (prom_config_path,))
-
-
-    # ok, do we have the job that ensures prometheus will call us? 
-    our_prom_config_file = os.path.join("/usr/local/etc/filewave/prometheus/conf.d/jobs/http/useful_dashboard_prom_config.yml")
-    if not os.path.exists(our_prom_config_file):
-        p_fail("%s is NOT present on disk - which means prometheus won't scrape this process - FAILED" % (our_prom_config_file,))
-    else:
-        p_ok("our prometheus configuration appears to be on disk - pass")
- 
-
-    # does the main fwxserver model version have the right spec? 
-    grep_command = "grep filewave_model_version /usr/local/etc/filewave/grafana/provisioning/dashboards/FileWave-Main.json | grep fwxserver-admin"
-    exit_code = os.system(grep_command)
-    if exit_code != 0:
-        p_fail("The /usr/local/etc/filewave/grafana/provisioning/dashboards/FileWave-Main.json needs 'fwxserver-admin' added to it - FAILED")        
-        fixes += 1
-    else:
-        p_ok("configuration for the main dashboard (model number) looks ok - pass")
-
-    return fixes
-
-
 def serve_and_process():
     print("Off we go, Ctrl-C to stop... ")
 
@@ -133,23 +111,25 @@ def serve_and_process():
     try:
         while(True):
             collect_client_data()
+            collect_patch_data()
             time.sleep(30)
     except Exception as e:
         print("Closing...", e)
 
 
 if __name__ == "__main__":
-    # by default, no params, we are simply going to run and serve metrics - but there's more!
-    p = argparse.ArgumentParser(description='Serve up some additional / custom metrics specific to FileWave')
-    p.add_argument('--validate', action='store_true', help='validate the server installation before running this tool')
-    p.add_argument('--fix', action='store_true', help='during validation, try to fix problems as well')
+    # # by default, no params, we are simply going to run and serve metrics - but there's more!
+    # p = argparse.ArgumentParser(description='Serve up some additional / custom metrics specific to FileWave')
+    # p.add_argument('--validate', action='store_true', help='validate the server installation before running this tool')
+    # p.add_argument('--fix', action='store_true', help='during validation, try to fix problems as well')
 
-    args = p.parse_args()
-    if args.fix:
-        should_fix = True
+    # args = p.parse_args()
+    # if args.fix:
+    #     should_fix = True
 
-    if args.validate:
-        validate_server_installation()
-    else:
-        serve_and_process()
+    # if args.validate:
+    #     validate_server_installation()
+    # else:
+
+    serve_and_process()
 
