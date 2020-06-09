@@ -105,4 +105,4 @@ Fetch the query to store on disk for the future
 -
 The queries can be stored on disk.
 
-    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20445/inv/api/v1/query/45 > by_su_critical.json
+    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20445/inv/api/v1/query/42 > by_client_info.json
