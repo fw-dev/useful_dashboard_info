@@ -21,13 +21,19 @@ def process_metric(duration: float, freq: int, callback):
         start_time = start_time + timedelta(seconds=freq)
 
 
-# TODO:
-# - Labels on the metrics, and values for those labels (maybe multiple or random?)
-
-
 @click.group()
 def cli():
     click.echo("Importer of impending doom. Welcome. Please take a seat.")
+
+
+"""
+This was my original idea.
+Create metrics based off some specification file; and then feed that file into tsdb.
+Problem is the values are meaningless and there are no labels.
+
+This method should probably be deleted.
+Only left here in case the other one (create) turns out to be bad for some reason.
+"""
 
 
 @cli.command(name='makedata')
@@ -111,16 +117,7 @@ def define_metric_for_this_url(metric_name: str, url, prom_date_range: str):
             'results': results_array,
         }
 
-    # # We will get one result per label combination
-    # def vector_handler():
-    #     return {
-    #         'metric_name': metric_name,
-    #         'type': 'vector',
-    #         'metric': data,
-    #     }
-
     handlers = {
-        # "vector": vector_handler,
         "matrix": matrix_handler,
     }
     if result_type not in handlers:
@@ -135,8 +132,8 @@ def define_metric_for_this_url(metric_name: str, url, prom_date_range: str):
 @click.option('-o', '--output', 'output_path', default="backfill_data", help='name of folder to use for created data')
 @click.option('-r', '--range', 'prom_date_range', default="30m", help="How far to look back for values")
 @click.option('-f', '--freq', default=15, help="frequency of samples", type=click.types.FLOAT)
-@click.option('-d', '--duration', default=1, help="duration of data to create", type=click.types.FLOAT)
-@click.option('-l', '--limit', help="If set, limit to the first N metrics. So dev doesn't take 100 years",
+@click.option('-d', '--duration', default=1, help="duration of data to create, in days", type=click.types.FLOAT)
+@click.option('-l', '--limit', help="If set, limit to the first N metrics. So dev doesn't take 100 years. Only active if -m not specified.",
               type=click.types.INT)
 @click.option('-t', '--threads', 'num_threads', default=100, help="How much damage to do", type=click.types.INT)
 def create_from_existing(url, metrics, output_path, prom_date_range: str, freq, duration, limit, num_threads):
