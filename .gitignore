@@ -2,3 +2,6 @@ env/**
 __pycache__/**
 .DS_Store
 
+backfill_from_existing.txt
+filewave-backfill/data
+backfill_dump.txt
