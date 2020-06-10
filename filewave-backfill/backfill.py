@@ -90,7 +90,7 @@ def make_get_request_for_json(url):
 
 
 def define_metric_for_this_url(metric_name: str, url, range: str):
-    click.echo(f"Finding labels for ... {metric_name}, range {range}")
+    # click.echo(f"Finding labels for ... {metric_name}, range {range}")
     endpoint = f"{url}/api/v1/query?query={metric_name}[{range}]"
     json = make_get_request_for_json(endpoint)
 
@@ -187,10 +187,10 @@ def create_from_existing(url, output, range: str, freq, duration, limit, num_thr
             # We have one result per combination of labels. Each result has all the data for the range (from which we're going to pick one).
             for result_for_some_labels in results_array:
                 labels_and_values = result_for_some_labels["metric"]
-                valid_labels = {l: v for l, v in labels_and_values.items if
-                                l != "__name__" and re.match(valid_label_regex, l)}
-                if len(valid_labels.keys()) < len(labels_and_values.keys) - 1:
-                    click.o
+                valid_labels = {label: val for label, val in labels_and_values.items() if
+                                label != "__name__" and re.match(valid_label_regex, label)}
+                if len(valid_labels.keys()) < len(labels_and_values.keys()) - 1:
+                    click.echo(f"Ignored some labels for {metric_name}")
                 labels_with_vals = [f'{mn}="{val}"' for mn, val in valid_labels.items()]
                 metric_label_part = "{" + ",".join(labels_with_vals) + "}"
 
