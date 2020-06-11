@@ -1,4 +1,5 @@
 from prometheus_client import start_http_server, Histogram, Gauge
+
 import pandas as pd
 import argparse
 import yaml
@@ -16,6 +17,46 @@ fw_query = FWRestQuery(
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
+
+class ClientCompliance:
+
+    # 0 - zero errors, all ok
+    # 1 - unknown, not enough information
+    # 2 - warning, something isn't quite right
+    # 3 - critical, something definately is wrong
+
+    def __init__(self, total_disk, free_disk, last_checkin_days):
+        self.total_disk = total_disk
+        self.free_disk = free_disk
+        self.last_checkin_days = last_checkin_days
+
+    def get_checkin_compliance(self):
+        if self.last_checkin_days <= 7:
+            return 0
+        if self.last_checkin_days < 14:
+            return 2
+        return 3
+
+    def get_disk_compliance(self):
+        # < 20% left is warning
+        # < 5% left is critical, or less than 5g
+        space_left_pcnt = (self.free_disk / self.total_disk) * 100.0
+        
+        space_compliance = 1
+        if space_left_pcnt >= 20:
+            space_compliance = 0
+        elif space_left_pcnt < 5:
+            space_compliance = 3
+        else:
+            space_compliance = 2 # its just less than 20
+
+        return space_compliance
+
+    def get_compliance_state(self):
+        checkin = self.get_checkin_compliance()        
+        disk = self.get_disk_compliance()
+        return max(checkin, disk)
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -48,9 +89,42 @@ device_information = Gauge('device_information',
     'various interesting stats on a per device basis, days since checked, compliance status',
     ["device_name", "platform", "compliant", "tracked", "locked", "fw_client_version"])
 
-inventory_query = Gauge('inventory_query_elapsed_seconds',
-    'the time taken to run inventory queries, along with info about whether they are used in smart groups or just reports'
-    )
+
+def collect_application_data():
+    r = fw_query.get_win_applications()
+    j = r.json()
+
+    df = pd.DataFrame(j["values"], columns=j["fields"])
+
+    # class Criteria:
+    #     def __init__(self, name, needs_dot, begins_with=False):
+    #         self.name = name
+    #         self.version_needs_decimal = needs_dot
+    #         self.begins_with = begins_with
+
+    # all the apps we are interested in... each has to have a version, some have to have a version with a dot (.)
+    contains_apps = [
+        "Google Chrome",
+        "Cisco AnyConnect Secure Mobility Client",
+        ".*Java.*Update.*",
+        "Adobe Acrobat Reader DC",
+        "Zoom"
+    ]
+
+    begins_apps = [
+        "Mozilla Firefox",
+        "Adobe Flash Player 29 NPAPI",
+        "Microsoft Office",
+        "VLC Media Player"
+    ]
+
+    print("For application data: ")
+    print(df.loc[df.Application_name.astype(str).str.contains(contains_apps)])
+
+    # flash_du = df.groupby(["Application_version"], as_index=False)["Client_device_id"].count()
+    # print(flash_du)
+
+
 
 def collect_patch_data():
     r = fw_query.get_software_patches()
@@ -85,17 +159,17 @@ def collect_patch_data():
 def collect_client_data():
     Client_device_name = 0
     Client_filewave_client_locked = 1
-    # Client_free_disk_space = 2
+    Client_free_disk_space = 2
     # Client_device_id = 3
     Client_is_tracking_enabled = 4
     # Client_location = 5
     # Client_serial_number = 6
     DesktopClient_filewave_client_version = 7
-    # Client_management_mode = 8
+    Client_management_mode = 8
     # Client_filewave_client_name = 9
     # Client_filewave_id = 10
     # OperatingSystem_version = 11
-    # Client_enrollment_state = 12
+    # Clienpyt_enrollment_state = 12
     OperatingSystem_name = 13
     # OperatingSystem_edition = 14
     # OperatingSystem_build = 15
@@ -107,6 +181,7 @@ def collect_client_data():
     # Client_device_product_name = 21
     # Client_current_upstream_host = 22
     # Client_current_upstream_port = 23
+    Client_total_disk_space = 24
 
     r = fw_query.get_client_info()
     j = r.json()
@@ -127,10 +202,16 @@ def collect_client_data():
                 delta = now - checkin_date
                 checkin_days = delta.days
 
+            comp_check = ClientCompliance(
+                v[Client_total_disk_space],
+                v[Client_free_disk_space],
+                checkin_days
+            )
+
             device_information.labels(
                 v[Client_device_name],
                 v[OperatingSystem_name],
-                True, # compliant
+                comp_check.get_compliance_state(), # compliant state, see class above
                 v[Client_is_tracking_enabled],
                 v[Client_filewave_client_locked],
                 v[DesktopClient_filewave_client_version]
@@ -140,9 +221,9 @@ def collect_client_data():
 
             if(checkin_days <= 1):
                 buckets[0] += 1
-            elif checkin_days <= 7:
+            elif checkin_days < 7:
                 buckets[1] += 1
-            elif checkin_days <= 30:
+            elif checkin_days < 30:
                 buckets[2] += 1
             else:
                 buckets[3] += 1
@@ -166,10 +247,10 @@ def serve_and_process():
         while(True):
             collect_client_data()
             collect_patch_data()
+            # collect_application_data()
             time.sleep(30)
     except Exception as e:
-        print("Closing...", e)
-
+        print("Outta here... fatal error...", e)
 
 if __name__ == "__main__":
     # # by default, no params, we are simply going to run and serve metrics - but there's more!

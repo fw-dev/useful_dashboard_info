@@ -1,0 +1,61 @@
+{
+    "criteria": {
+        "expressions": [
+            {
+                "column": "name",
+                "component": "Application",
+                "operator": "is",
+                "qualifier": "Zoom"
+            },
+            {
+                "column": "type",
+                "component": "OperatingSystem",
+                "operator": "is",
+                "qualifier": "WIN"
+            },
+            {
+                "column": "version",
+                "component": "Application",
+                "operator": "contains",
+                "qualifier": "."
+            }
+        ],
+        "logic": "all"
+    },
+    "fields": [
+        {
+            "column": "product_id",
+            "component": "Application"
+        },
+        {
+            "column": "name",
+            "component": "Application"
+        },
+        {
+            "column": "version",
+            "component": "Application"
+        },
+        {
+            "column": "size",
+            "component": "Application"
+        },
+        {
+            "column": "install_size",
+            "component": "Application"
+        },
+        {
+            "column": "is_validated",
+            "component": "Application"
+        },
+        {
+            "column": "device_id",
+            "component": "Client"
+        }
+    ],
+    "group": 45,
+    "main_component": "Application",
+    "name": "Zoom Win",
+    "id": 1275,
+    "version": 2,
+    "favorite": false
+}

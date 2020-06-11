@@ -12,6 +12,8 @@ The motivator was Alex Fredlake's request for the following types of visualizati
 6. Chart based on last Windows security update window. (Show how frequently your devices have pulled software updates, in a time frame window like 2)
 7. [DONE] How many devices have location enabled 
 8. How many devices have Office installed, and what version. 
+   What versions of java, flash, reader, office, zip, anyconnect, firefox, chrome, zoom, citrix?  one spike with latest version, all the others I need to fix.
+   - UNWANTED apps that are present on the devices.... gimme a list. 
 9. Devices with high usability, vs low usability (maybe something with login time and application usage).
 10. Who is online now? Client devices - it's useful to know if I can work with the device right now.  Is a particular [smart] group online now?  This is OK to be restricted to remote devices, e.g. when doing remote control to know that this will/should work?
 11. The list of outstanding fileset deployment delays. 
@@ -75,16 +77,16 @@ Add port 21090 to access prometheus targets for debugging them:
     sudo firewall-cmd --zone=public --add-port=21090/tcp --permanent
     sudo firewall-cmd --reload
 
-Add in a job to scrap the Python metrics we're about to run.
+Add in a job to scrape the Python metrics exposed by this program.
 -
-The following configuration step will be auto discovered & loaded - there is no need to restart any server.  Write the following text to a file called:
+The following configuration step will be auto discovered & loaded - there is no need to restart any server.  Write the following text to a file called 'histo.yml' at this path:
 
 > /usr/local/etc/filewave/prometheus/conf.d/jobs/http/histo.yml
 
 ```yaml
-- targets: ['localhost:8000']
+- targets: ['hostname-of-running-container-with-extra-metrics:8000']
   labels:
-    purpose: "checkin"
+    job: "extra-metrics"
 ```
 
 Don't skip this - SSL Certs
@@ -93,16 +95,11 @@ Make darn sure you have an SSL certificate, it must be valid, trusted by everyon
 
 Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
 
-Load up the Client Data Query
+Fetching a query to store on disk for the future
 -
-The file called 'query_dashboard_info_clients.json' needs to be loaded into the FW server. 
-
-    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" -d "@query_dashboard_info_clients.json" -X POST "https://fwsrv.cluster8.tech:20445/inv/api/v1/query/"
-
-** this does not yet work **
-
-Fetch the query to store on disk for the future
--
-The queries can be stored on disk.
+The queries can be pulled from a running FW instance and stored on disk:
 
     curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20445/inv/api/v1/query/42 > by_client_info.json
+
+    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20443/instrumentation/metrics
+
