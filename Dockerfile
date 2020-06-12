@@ -54,6 +54,19 @@ ENV DEBIAN_FRONTEND=dialog
 ADD requirements.txt .
 RUN python -m pip install -r requirements.txt 
 
+# allows us to compile tsdb for loading pre-historic animal data into prometheus with joy
+RUN wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.14.4.linux-amd64.tar.gz
+RUN export PATH=$PATH:/usr/local/go/bin
+
+# allows us to hang our heads in shame as we can't set env vars
+ENV GO111MODULE=on
+
+# allows us to install the worlds absolute best build and package tool.  ever. 
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt update && apt install -y yarn
+
 EXPOSE 8000
 WORKDIR /app
 ADD . /app

@@ -1,105 +1,51 @@
-Useful Dashboard Info
-=
+# FileWave Extra Metrics
+The purpose of Extra Metrics is to augment a standard FileWave installation with additional metrics and dashboard capabilities. 
 
-The purpose is to inject queries and configuration into a Dashboard capable FileWave installation.
+# Overview
+Extra Metrics provides 
 
-The motivator was Alex Fredlake's request for the following types of visualizations:
-1. [DONE] Chart of different OS types and how many you have of each
-2. [DONE] Chart of last time devices have checked in. (last 24 hours, last 7 days, last month, longer) 
-3. BAR GRAPH - Chart of what model of devices (What windows product models you have and number of each) 
-4. [DONE] Windows OS types (Chart of how many on each type of build) 
-5. How many of each macOS, Android, iOS version. table for each
-6. Chart based on last Windows security update window. (Show how frequently your devices have pulled software updates, in a time frame window like 2)
-7. [DONE] How many devices have location enabled 
-8. How many devices have Office installed, and what version. 
-   What versions of java, flash, reader, office, zip, anyconnect, firefox, chrome, zoom, citrix?  one spike with latest version, all the others I need to fix.
-   - UNWANTED apps that are present on the devices.... gimme a list. 
-9. Devices with high usability, vs low usability (maybe something with login time and application usage).
-10. Who is online now? Client devices - it's useful to know if I can work with the device right now.  Is a particular [smart] group online now?  This is OK to be restricted to remote devices, e.g. when doing remote control to know that this will/should work?
-11. The list of outstanding fileset deployment delays. 
-
-Software Compliance
-=
-
-Information we have: 
-- all the software updates that are available
-- all the software updates that are being requested by clients (creation date, )
-
-Show me: 
-- [older] security updates that are critical that are NOT installed (where?)
-  - number of outstanding critical updates, split by OS
-  - number of clients affected by the critical updates
-  - list of devices that don't have the updates
 - percentage of fleet that isn't 100% protected by critical updates
+
 - how many critical updates still haven't been installed 1 week after they were made available
 
 1. Number of critical updates that are not fully deployed. 
 
-
-
-
-The visualizations require data collection (inventory queries), aggregation of some sort and a dashboard panel.
-
-Queries
--
-
-Aggregation
--
-
-Panels
--
-
-Examples
-=
-
-| Description | Aggregation | Panel Type | Links to |
-| ----------- | ------------| ---------- | -------- |
-| Different Client OS types | by OS name | Pie Chart | Web list of devices
-| Last time devices checked in | Time buckets | Bar Chart | Web list of devices
-| Chart of device models | by device model | Pie Chart | Web list of devices
-| Windows OS Types | by OS build | Pie Chart | WLoD
-| How many of each OS version for macOS, Android, iOS | by OS type, then version | Bar chart? | WLoD
-| Windows security updates | | | |
-| How many devices have Office Installed and what version | group by Office version, count | Pie Chart | WLoD
-| Devices with high CPU usage | special case, requires client scripts - and more investigation
-
-Architecture & Implementation
-==
-There are lots of tools available within the FileWave system to help implement the dashboard data collection and aggregation.  This script uses as much as possible of the existing tools to get the job done. 
-
-Manually
-==
-
-Fix up the SSL/bearer token configuration for Prometheus dynamic queries - is was entirely missing from my setup when I last loaded it.  Copy the base64 token into a bearer_token_file located at: /usr/local/etc/filewave/prometheus/conf.d
-
-Add port 21090 to access prometheus targets for debugging them:
-
-    sudo firewall-cmd --zone=public --add-port=21090/tcp --permanent
-    sudo firewall-cmd --reload
-
-Add in a job to scrape the Python metrics exposed by this program.
--
-The following configuration step will be auto discovered & loaded - there is no need to restart any server.  Write the following text to a file called 'histo.yml' at this path:
-
-> /usr/local/etc/filewave/prometheus/conf.d/jobs/http/histo.yml
-
-```yaml
-- targets: ['hostname-of-running-container-with-extra-metrics:8000']
-  labels:
-    job: "extra-metrics"
-```
-
-Don't skip this - SSL Certs
--
-Make darn sure you have an SSL certificate, it must be valid, trusted by everyone (not just the server) and absolutely under no circumstances should it be self signed.  
+# Don't skip this - SSL Certs
+Make sure you have an SSL certificate, it must be valid, trusted by everyone (not just the server) and absolutely under no circumstances should it be self signed.  
 
 Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
 
-Fetching a query to store on disk for the future
+# Installation
+Extra Metrics can be installed into any Python3 system using pip.  These instructions assume you will be installing Extra Metrics on your FileWave Server, which already has Python3.7 (or later) installed.
+
+Extra Metrics is on PyPy, and as such can be installed with pip: 
+
+    $ sudo /usr/local/filewave/python/bin/python3 pip install filewave-extra-metrics
+    
+This installs the module and executables - but it must be configured first before you can use it.  
+
+> Configuring extra-metrics to run on another host depends on what that host is and is therefore not covered here. 
+
+## Step 1: Configure FileWave to pull information from the Extra Metrics module
+The Extra Metrics module contains commands to inject the appropriate configuration into your FileWave system automatically. 
+
+To ensure the FileWave Dashboard system is pulling data from Extra Metrics; run the following command:
+
+    $ extra-metrics-install-prometheus-config
+
+Configure an Inventory API Key
 -
-The queries can be pulled from a running FW instance and stored on disk:
+Extra Metrics should be configured with an Inventory API Key in order to access Inventory and create the inventory groups and queries.
 
-    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20445/inv/api/v1/query/42 > by_client_info.json
+The following permissions are required for the API Key; these can be set up in the Manage Administrators tool -> Application Tokens interface.  
 
-    curl -s -k -H "Authorization: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=" https://fwsrv.cluster8.tech:20443/instrumentation/metrics
+Note: ** please create a unique access token (API Key) for the Extra Metrics module ** - if you ever need to revoke the token you will only affect this module and nothing else. 
 
+Once you have the API key; use the following command: 
+
+  $ extra-metrics-configure --api-key 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=' --ext-dns 'fwsrv.cluster8.tech'
+
+
+Reference
+=
+Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks

@@ -1,6 +1,6 @@
 import concurrent.futures
 import os
-import re
+import re, sys, shutil
 import subprocess
 from datetime import datetime, timezone, timedelta
 from random import randint
@@ -8,7 +8,6 @@ from random import randint
 import click
 import progressbar
 import requests
-
 
 def process_metric(duration: float, freq: int, callback):
     # Determine most historical timestamp; based on now - duration.
@@ -133,10 +132,11 @@ def define_metric_for_this_url(metric_name: str, url, prom_date_range: str):
 @click.option('-r', '--range', 'prom_date_range', default="30m", help="How far to look back for values")
 @click.option('-f', '--freq', default=15, help="frequency of samples", type=click.types.FLOAT)
 @click.option('-d', '--duration', default=1, help="duration of data to create, in days", type=click.types.FLOAT)
+@click.option('-p', '--target-platform', 'target_platform', show_default=True, default=sys.platform, help='target platform where the TSDB import takes place, e.g. what server is prometheus running on (darwin/linux)', type=click.types.STRING)
 @click.option('-l', '--limit', help="If set, limit to the first N metrics. So dev doesn't take 100 years. Only active if -m not specified.",
               type=click.types.INT)
-@click.option('-t', '--threads', 'num_threads', default=100, help="How much damage to do", type=click.types.INT)
-def create_from_existing(url, metrics, output_path, prom_date_range: str, freq, duration, limit, num_threads):
+@click.option('-t', '--threads', 'num_threads', default=100, help="How much damage to do all at once", type=click.types.INT)
+def create_from_existing(url, metrics, output_path, prom_date_range: str, freq, duration, target_platform, limit, num_threads):
     if len(metrics) == 0:
         endpoint = f"{url}/api/v1/label/__name__/values"
         click.echo(f"Reading from {endpoint}")
@@ -180,6 +180,9 @@ def create_from_existing(url, metrics, output_path, prom_date_range: str, freq, 
     if not os.path.exists(output_path):
         click.echo(f"Making output folder: {output_path}")
         os.makedirs(output_path)
+
+    # Copy the right TSDB thing to the output folder...
+    shutil.copy(f"./tsdb-{target_platform}", os.path.join(output_path, f"tsdb"))
 
     # Timestamps must be ascending, otherwise tsdb will crash with 'out of bounds'
     def write_single_file_for_metric(metric_name):
@@ -232,9 +235,15 @@ def import_from_folder(input_path, data_path, done_path):
     if not os.path.exists(done_path):
         os.mkdir(done_path)
 
+    """
+    find backfill_data/ -type f -exec tsdb-linux import {} data/ \;
+    """
+
+    TSDB_EXE_NAME = f"./tsdb"
+
     for file in os.listdir(input_path):
         file_name = os.path.join(input_path, file)
-        command = ["./tsdb", "import", file_name, data_path]
+        command = [TSDB_EXE_NAME, "import", file_name, data_path]
         click.echo(f"Processing: {file}")
         tsdb_run = subprocess.run(command)
         if tsdb_run.returncode != 0:

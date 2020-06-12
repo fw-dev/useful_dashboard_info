@@ -1,62 +1,33 @@
 from prometheus_client import start_http_server, Histogram, Gauge
-
+import logging
+import timeloop
 import pandas as pd
-import argparse
 import yaml
 import random
 import time
 import sys
-import os, datetime
+import os, json
+import datetime
+import threading
 
+from application import ApplicationQueryManager
+from compliance import ClientCompliance
 from fwrest import FWRestQuery
+
+from logs import logger, init_logging
+
+init_logging()
 
 fw_query = FWRestQuery(
     hostname = 'fwsrv.cluster8.tech',
     api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
 )
 
+tl = timeloop.Timeloop()
+app_qm = ApplicationQueryManager(fw_query)
+
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
-
-class ClientCompliance:
-
-    # 0 - zero errors, all ok
-    # 1 - unknown, not enough information
-    # 2 - warning, something isn't quite right
-    # 3 - critical, something definately is wrong
-
-    def __init__(self, total_disk, free_disk, last_checkin_days):
-        self.total_disk = total_disk
-        self.free_disk = free_disk
-        self.last_checkin_days = last_checkin_days
-
-    def get_checkin_compliance(self):
-        if self.last_checkin_days <= 7:
-            return 0
-        if self.last_checkin_days < 14:
-            return 2
-        return 3
-
-    def get_disk_compliance(self):
-        # < 20% left is warning
-        # < 5% left is critical, or less than 5g
-        space_left_pcnt = (self.free_disk / self.total_disk) * 100.0
-        
-        space_compliance = 1
-        if space_left_pcnt >= 20:
-            space_compliance = 0
-        elif space_left_pcnt < 5:
-            space_compliance = 3
-        else:
-            space_compliance = 2 # its just less than 20
-
-        return space_compliance
-
-    def get_compliance_state(self):
-        checkin = self.get_checkin_compliance()        
-        disk = self.get_disk_compliance()
-        return max(checkin, disk)
-
 
 class bcolors:
     HEADER = '\033[95m'
@@ -75,11 +46,15 @@ def p_fail(msg):
 
 software_updates_by_device = Gauge('software_updates_by_device', 
     'list of devices and the number of [critical] updates they need to have installed', 
-    ["device_name", "is_update_critical"])
+    ["device_name", "device_id", "is_update_critical"])
 
 software_updates_by_platform = Gauge('software_updates_by_platform', 
     'list of platforms and the number of [critical] updates they have available', 
     ["platform_name", "is_update_critical"])
+
+software_updates_by_state = Gauge('software_updates_by_state', 
+    'buckets of all the software updates, according to the number of devices in each state',
+    ["state"])
 
 device_checkin_days = Gauge('device_checkin_days', 
     'various interesting stats on a per device basis, days since checked, compliance status', 
@@ -91,42 +66,66 @@ device_information = Gauge('device_information',
 
 
 def collect_application_data():
-    r = fw_query.get_win_applications()
+    app_qm.validate_query_definitions()
+
+
+
+def collect_patch_data_via_web_ui():
+    r = fw_query.get_software_updates_web_ui()
     j = r.json()
 
-    df = pd.DataFrame(j["values"], columns=j["fields"])
+    assert j["next"] is None
+    r = j["results"]
 
-    # class Criteria:
-    #     def __init__(self, name, needs_dot, begins_with=False):
-    #         self.name = name
-    #         self.version_needs_decimal = needs_dot
-    #         self.begins_with = begins_with
+    # goal: number of software updates, grouped by status:
+    # status values:
+    # NEW: count_unassigned
+    # IN PROGRESS: count_assigned
+    # FAILED: assigned_clients.error + assigned_clients.warning
+    # DONE: assigned_clients.remaining == 0
 
-    # all the apps we are interested in... each has to have a version, some have to have a version with a dot (.)
-    contains_apps = [
-        "Google Chrome",
-        "Cisco AnyConnect Secure Mobility Client",
-        ".*Java.*Update.*",
-        "Adobe Acrobat Reader DC",
-        "Zoom"
-    ]
+    # later: so how can Pandas groupby a code expression? 
+    counters = {
+        "assigned": 0,
+        "completed": 0,
+        "remaining": 0,
+        "warning": 0,
+        "error": 0
+    }
 
-    begins_apps = [
-        "Mozilla Firefox",
-        "Adobe Flash Player 29 NPAPI",
-        "Microsoft Office",
-        "VLC Media Player"
-    ]
+    # values = [
+    #     [
+    #         t["assigned_clients_count"]
+    #     ]
+    # ]
 
-    print("For application data: ")
-    print(df.loc[df.Application_name.astype(str).str.contains(contains_apps)])
+    for item in r:
+        acc = item["assigned_clients_count"]
+        counters["assigned"] += acc["assigned"]
+        counters["completed"] += acc["completed"]
+        counters["remaining"] += acc["remaining"]
+        counters["warning"] += acc["warning"]
+        counters["error"] += acc["error"]
 
-    # flash_du = df.groupby(["Application_version"], as_index=False)["Client_device_id"].count()
-    # print(flash_du)
+    software_updates_by_state.labels('Assigned').set(counters["assigned"])
+    software_updates_by_state.labels('Completed').set(counters["completed"])
+    software_updates_by_state.labels('Remaining').set(counters["remaining"])
+    software_updates_by_state.labels('Warning').set(counters["warning"])
+    software_updates_by_state.labels('Error').set(counters["error"])
 
+'''
+For tomorrow: 
 
+To get software updates: use the test.py code
 
-def collect_patch_data():
+Go to work and get my laptop?
+
+Then to populate health per device, pull inventory data - group all updates by client_name and start counting
+
+Question: if ALL updates are actually deployed, does this work? 
+
+'''
+def collect_patch_data_via_inventory():
     r = fw_query.get_software_patches()
     j = r.json()
 
@@ -136,23 +135,20 @@ def collect_patch_data():
         "1": "Microsoft"
     }
 
-    software_updates_by_platform.labels(platform_mapping["0"], False).set(0)
-    software_updates_by_platform.labels(platform_mapping["1"], False).set(0)
-
-    ru = df.groupby(["Client_filewave_client_name", "Update_critical"], as_index=False)["Update_name"].count()
+    ru = df.groupby(["Client_filewave_client_name", "Client_filewave_id", "Update_critical"], as_index=False)["Update_name"].count()
     for i in ru.to_numpy():
         client_name = i[0]
-        is_crit = i[1]
-        update_count = i[2]
-        print(client_name, is_crit, update_count)
-        software_updates_by_device.labels(client_name, is_crit).set(update_count)
+        client_id = int(i[1])
+        is_crit = i[2]
+        update_count = i[3]
+        logger.info(f"patches, device: {client_name}/{client_id}, critical: {is_crit}, number of updates: {update_count}")
+        software_updates_by_device.labels(client_name, client_id, is_crit).set(update_count)
 
     ru = df.groupby(["Update_platform", "Update_critical"], as_index=False)["Update_name"].count()
     for i in ru.to_numpy():
         platform_name = platform_mapping[i[0]]
         is_crit = i[1]
         update_count = i[2]
-        print(platform_name, is_crit, update_count)
         software_updates_by_platform.labels(platform_name, is_crit).set(update_count)
 
 
@@ -168,7 +164,7 @@ def collect_client_data():
     Client_management_mode = 8
     # Client_filewave_client_name = 9
     # Client_filewave_id = 10
-    # OperatingSystem_version = 11
+    OperatingSystem_version = 11
     # Clienpyt_enrollment_state = 12
     OperatingSystem_name = 13
     # OperatingSystem_edition = 14
@@ -208,16 +204,22 @@ def collect_client_data():
                 checkin_days
             )
 
+            client_ver = v[DesktopClient_filewave_client_version]
+            if client_ver is None:
+                client_ver = "Unknown"
+
+            # TODO: when rolling this up, if we have another entry that is non-null in any of the columns
+            # and this row IS null; drop this row. 
             device_information.labels(
                 v[Client_device_name],
                 v[OperatingSystem_name],
                 comp_check.get_compliance_state(), # compliant state, see class above
                 v[Client_is_tracking_enabled],
                 v[Client_filewave_client_locked],
-                v[DesktopClient_filewave_client_version]
+                client_ver 
             ).set(v[DesktopClient_filewave_model_number] if v[DesktopClient_filewave_model_number] is not None else 0)
 
-            print("checkin days:", v[0], checkin_days)
+            logger.info(f"info, device: {v[Client_device_name]}, os: {v[OperatingSystem_name]}, client_ver: {client_ver}")
 
             if(checkin_days <= 1):
                 buckets[0] += 1
@@ -237,33 +239,25 @@ def collect_client_data():
         print("The validation/assertions failed: %s" % (e1,))
 
 
-def serve_and_process():
-    print("Off we go, Ctrl-C to stop... ")
+@tl.job(interval=datetime.timedelta(seconds=30))
+def validate_and_collect_data():
+    collect_application_data()
+    collect_client_data()
+    collect_patch_data_via_inventory()
+    collect_patch_data_via_web_ui()
 
-    # Serve these stats... via glorius and wonderful http
+
+def serve_and_process():
+    # Serve those stats!
     start_http_server(8000)
 
-    try:
-        while(True):
-            collect_client_data()
-            collect_patch_data()
-            # collect_application_data()
-            time.sleep(30)
-    except Exception as e:
-        print("Outta here... fatal error...", e)
+    # collect the first chunk of info from our server
+    validate_and_collect_data()
+
+    # just sit here being a web server...
+    tl.start(block=True)
+
 
 if __name__ == "__main__":
-    # # by default, no params, we are simply going to run and serve metrics - but there's more!
-    # p = argparse.ArgumentParser(description='Serve up some additional / custom metrics specific to FileWave')
-    # p.add_argument('--validate', action='store_true', help='validate the server installation before running this tool')
-    # p.add_argument('--fix', action='store_true', help='during validation, try to fix problems as well')
-
-    # args = p.parse_args()
-    # if args.fix:
-    #     should_fix = True
-
-    # if args.validate:
-    #     validate_server_installation()
-
     serve_and_process()
 
