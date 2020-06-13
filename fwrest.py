@@ -34,7 +34,7 @@ class FWRestQuery:
         return {'Authorization': self.api_key, 'Content-Type': 'application/json'}
 
     def get_results_for_query_id(self, query_id):
-        return requests.get(self._fw_run_inv_query(f'query/{query_id}'),
+        return requests.get(self._fw_run_inv_query(f'query_result/{query_id}'),
                              headers=self._auth_headers())
 
     def find_group_with_name(self, group_name):
@@ -95,3 +95,17 @@ class FWRestQuery:
         return requests.post(self._fw_run_inv_query('query_result/'),
                              headers=self._auth_headers(),
                              data=query_win_applications)
+
+
+if __name__ == "__main__":
+    fw_query = FWRestQuery(
+        hostname = 'fwsrv.cluster8.tech',
+        api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
+    )
+
+    r = fw_query.get_results_for_query_id(109)
+    if r.status_code == 200:
+        j = r.json()
+        print(json.dumps(j, indent=2))
+    else:
+        print("problem: ", r)

@@ -44,30 +44,30 @@ def p_ok(msg):
 def p_fail(msg):
     print(bcolors.FAIL, msg, bcolors.ENDC)
 
-software_updates_by_device = Gauge('software_updates_by_device', 
+software_updates_by_device = Gauge('extra_metrics_software_updates_by_device', 
     'list of devices and the number of [critical] updates they need to have installed', 
     ["device_name", "device_id", "is_update_critical"])
 
-software_updates_by_platform = Gauge('software_updates_by_platform', 
+software_updates_by_platform = Gauge('extra_metrics_software_updates_by_platform', 
     'list of platforms and the number of [critical] updates they have available', 
     ["platform_name", "is_update_critical"])
 
-software_updates_by_state = Gauge('software_updates_by_state', 
+software_updates_by_state = Gauge('extra_metrics_software_updates_by_state', 
     'buckets of all the software updates, according to the number of devices in each state',
     ["state"])
 
-device_checkin_days = Gauge('device_checkin_days', 
+device_checkin_days = Gauge('extra_metrics_devices_by_checkin_days', 
     'various interesting stats on a per device basis, days since checked, compliance status', 
     ["days",])
 
-device_information = Gauge('device_information',
+device_information = Gauge('extra_metrhics_per_device_information',
     'various interesting stats on a per device basis, days since checked, compliance status',
     ["device_name", "platform", "compliant", "tracked", "locked", "fw_client_version"])
 
 
 def collect_application_data():
     app_qm.validate_query_definitions()
-
+    app_qm.collect_application_query_results()
 
 
 def collect_patch_data_via_web_ui():

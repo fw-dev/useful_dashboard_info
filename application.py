@@ -1,5 +1,15 @@
 import pandas as pd
+from prometheus_client import Gauge
+import os, json
 from fwrest import FWRestQuery
+from logs import logger
+import concurrent.futures
+
+
+app_version_count = Gauge('extra_metrics_application_version',
+    'a summary of how many devices are using a particular app & version',
+    ["application_name", "application_version"])
+
 
 """
 Application Usage - Rollup
@@ -11,9 +21,9 @@ Once the counts have been made; they are stored and would be ready to pull out a
 isn't part of this class though.
 """
 class ApplicationUsageRollup:
-    def __init__(self, query_id, rollup_column_name, op_column_name, op="count"):
+    def __init__(self, query_id, rollup_column_names, op_column_name, op="count"):
         self.query_id = query_id
-        self.rollup_column_name = rollup_column_name
+        self.rollup_column_names = rollup_column_names if isinstance(rollup_column_names, list) else [rollup_column_names]
         self.op_column_name = op_column_name
         self.op = op
         self.result_df = None
@@ -23,19 +33,44 @@ class ApplicationUsageRollup:
         j = r.json()
         df = pd.DataFrame(j["values"], columns=j["fields"])
         # run the group-by and count operation
-        self.result_df = df.groupby([self.rollup_column_name])[self.op_column_name].sum()
+        self.result_df = df.groupby(self.rollup_column_names, as_index=False)[self.op_column_name].count()
 
+    def results(self):
+        return self.result_df.to_numpy()
 
 """
 Responsible for managing the refresh of queries for apps from the FW server, associating that 
 with the rolled up results (via ApplicationUsageRollup)
 """
 class ApplicationQueryManager:
-    self.app_queries = {}
-    self.app_rollups = {}
-
     def __init__(self, fw_query):
         self.fw_query = fw_query
+        self.app_queries = {}
+
+    @staticmethod 
+    def is_query_valid(json_query):
+        app_name = False
+        app_version = False
+        client_id = False
+
+        # requires id/name too
+        if "name" not in json_query:
+            return False
+
+        if "id" not in json_query:
+            return False
+
+        # we are expecting Application_name, Application_version and Client_filewave_id
+        fields_array = json_query["fields"]
+        for item in fields_array:
+            if item["column"] == "name" and item["component"] == "Application":
+                app_name = True
+            if item["column"] == "version" and item["component"] == "Application":
+                app_version = True
+            if item["column"] == "device_id" and item["component"] == "Client":
+                client_id = True
+
+        return app_name and app_version and client_id
 
     def create_default_queries_in_group(self, group_id):
         app_queries_dir = os.path.join(os.getcwd(), "app_queries")
@@ -50,12 +85,12 @@ class ApplicationQueryManager:
         # in all cases - read all queries in this group and find their IDs, store in-mem for redirection 
         all_queries = self.fw_query.get_all_inventory_queries()
         
-        app_queries = {}
+        self.app_queries = {}
         for q in all_queries:
             q_group = q["group"]
             q_id = q["id"]
-            if q_group == group_id:
-                app_queries[q_id] = q
+            if q_group == group_id and ApplicationQueryManager.is_query_valid(q):
+                self.app_queries[q_id] = q
                 logger.info(f"refreshed app query {q_id}/{q['name']}")
 
     def validate_query_definitions(self):
@@ -70,3 +105,14 @@ class ApplicationQueryManager:
 
         self.retrieve_all_queries_in_group(group_id)
 
+    def collect_application_query_results(self):
+        for q in self.app_queries:
+            r = ApplicationUsageRollup(q["id"], ["Application_name", "Application_version"], "Client_device_id")
+            r.exec(self.fw_query)
+            
+            # and of course, throw this into the metric we are exposing.
+            for result in r.results():
+                name = result[0]
+                version = result[1]
+                total = result[3]
+                app_version_count.labels(name, version).set(total)                

@@ -1,82 +1,184 @@
 from fwrest import FWRestQuery
-import json, sys, os
+import json
+import sys
+import os
 import pandas as pd
-from main import retrieve_all_queries_in_group, create_default_queries_in_group
-from queries import query_software_patches
+import unittest
 
+from application import ApplicationQueryManager, ApplicationUsageRollup
+import test_queries
+from test_queries import test_query_app_adobe_acrobat_reader_win, test_win_app_generic_should_not_load, test_query_app_wrong_group_zoom_win, test_query_app_zoom_win
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
 
-fw_query = FWRestQuery(
-    hostname = 'fwsrv.cluster8.tech',
-    api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
-)
 
-query_group, was_created = fw_query.ensure_inventory_query_group_exists("Extra Metrics Queries - Apps")
-group_id = query_group["id"]
-print(f"group_id: {group_id}, {was_created}")
-if was_created:
-    create_default_queries_in_group(group_id)
-retrieve_all_queries_in_group(group_id)
+class FakeRequest:
+    def __init__(self, string_data):
+        self.data = string_data
 
-sys.exit(5)
-
-r = fw_query.get_software_updates_web_ui()
-j = r.json()
-
-assert j["next"] is None
-r = j["results"]
-
-# print("we got:")
-# print(json.dumps(r, indent=2))
+    def json(self):
+        return json.loads(self.data)
 
 
-# I want to: 
-#
-# read the software updates web UI into Pandas
-# 
-# group by update/platform/criticality 
+class FakeQueryInteface:
+    TEST_QUERY_APPS = 1
 
-values = [ 
-    [ 
-        t["id"], 
-        t["update_id"], 
-        t["platform"], 
-        t["critical"], 
-        t["name"]["display_value"],
-        t["count_unassigned"],
-        t["assigned_clients_count"]["assigned"],
-        t["assigned_clients_count"]["completed"],
-        t["assigned_clients_count"]["remaining"],                
-        t["assigned_clients_count"]["warning"],
-        t["assigned_clients_count"]["error"],
-        t["import_error"]
-    ] for t in r 
-]
-    
-columns = [
-    "id",
-    "update_id",
-    "platform",
-    "is_critical",
-    "name",
-    "unassigned_count",
-    "assigned",
-    "completed",
-    "remaining",
-    "warning",
-    "error",
-    "import_error"
-]
+    def get_all_inventory_queries(self):
+        # returns some good, some bad... some in our group, some not.
+        text_queries = [test_query_app_adobe_acrobat_reader_win, 
+                test_win_app_generic_should_not_load, 
+                test_query_app_wrong_group_zoom_win, 
+                test_query_app_zoom_win]
 
-df = pd.DataFrame(values, columns=columns)
-print(df)
+        return [json.loads(t) for t in text_queries]
 
-t8 = df['assigned'].sum()
-print(f"assigned: {df['assigned'].sum()}, completed: {df['completed'].sum()}")
+    def get_results_for_query_id(self, query_id):
+        if query_id == FakeQueryInteface.TEST_QUERY_APPS:
+            return FakeRequest('''{
+                "offset": 0,
+                "fields": [
+                    "Application_product_id",
+                    "Application_name",
+                    "Application_version",
+                    "Application_size",
+                    "Application_install_size",
+                    "Application_is_validated",
+                    "Client_filewave_client_name",
+                    "Client_device_id"
+                ],
+                "values": [
+                    [
+                        "{abcdefg}",
+                        "Some App",
+                        "12.1",
+                        null,
+                        6459167232,
+                        null,
+                        "hades",
+                        "4d9fe4590232f39b783d95adf8b12bb24e4f7139"
+                    ],
+                    [
+                        "{AC76BA86-7AD7-1033-7B44-AC0F074E4100}",
+                        "Adobe Acrobat Reader DC",
+                        "20.009.20067",
+                        null,
+                        339167232,
+                        null,
+                        "hades",
+                        "4d9fe4590232f39b783d95adf8b12bb24e4f7139"
+                    ],
+                    [
+                        "{AC76BA86-7AD7-1033-7B44-AC0F074E4100}",
+                        "Adobe Acrobat Reader DC",
+                        "20.009.20067",
+                        null,
+                        339167232,
+                        null,
+                        "hades2",
+                        "4d9fe4590232f39b783d95bdf8b12bb24e4f7139"
+                    ]
 
-ru = df.groupby(["platform", "is_critical"], as_index=False)["update_id"].count()
-print(ru)
-for i in ru.to_numpy():
-    print(f"wheee {i[0]}, crit: {i[1]}, count: {i[2]}")
+                ],
+                "filter_results": 1,
+                "total_results": 1,
+                "version": 1
+            }''')
 
+
+fw_query = FakeQueryInteface()
+
+
+class ExtraMetricsFakeQueryTestCase(unittest.TestCase):
+    pass
+
+
+class ExtraMetricsTestCase(unittest.TestCase):
+    def test_app_manager_doesnt_load_crap_queries(self):
+        app_mgr = ApplicationQueryManager(fw_query)
+        app_mgr.retrieve_all_queries_in_group(test_queries.MAIN_GROUP_ID)
+        self.assertEqual(len(app_mgr.app_queries), 2)
+        self.assertTrue(120 not in app_mgr.app_queries.keys())
+        self.assertTrue(101 in app_mgr.app_queries.keys())
+        self.assertTrue(105 in app_mgr.app_queries.keys())
+
+    def test_app_mgr_accepts_valid_inventory_query(self):
+        well_formed_query = '''{
+            "favorite": true,
+            "fields": [
+                {
+                    "column": "device_id",
+                    "component": "Client"
+                },
+                {
+                    "column": "name",
+                    "component": "Application"
+                },
+                {
+                    "column": "version",
+                    "component": "Application"
+                }
+            ],
+            "main_component": "Update",
+            "name": "extra metrics - software patch",
+            "id": 55
+        }'''
+
+        result = ApplicationQueryManager.is_query_valid(
+            json.loads(well_formed_query))
+        self.assertTrue(result)
+
+    def test_app_mgr_rejects_invalid_inventory_query(self):
+        badly_formed_query = '''{
+            "favorite": true,
+            "fields": [
+                {
+                    "column": "filewave_id",
+                    "component": "Client"
+                },
+                {
+                    "column": "filewave_client_name",
+                    "component": "Client"
+                },
+                {
+                    "column": "version",
+                    "component": "Update"
+                }
+            ],
+            "main_component": "Update",
+            "display_name": "extra metrics - software patch"
+        }'''
+
+        result = ApplicationQueryManager.is_query_valid(
+            json.loads(badly_formed_query))
+        self.assertFalse(result)
+
+    def test_app_rollup(self):
+        thing = ApplicationUsageRollup(FakeQueryInteface.TEST_QUERY_APPS, [
+                                       "Application_name", "Application_version"], "Client_device_id")
+        thing.exec(fw_query)
+
+        # examine the rollup results to prove this worked
+        r = thing.results()
+        self.assertEqual(len(r), 2)
+
+        item = r[0]
+        item_name = item[0]
+        item_version = item[1]
+        item_count = item[2]
+
+        self.assertEqual(item_name, "Adobe Acrobat Reader DC")
+        self.assertEqual(item_version, "20.009.20067")
+        self.assertEqual(item_count, 2)
+
+        item = r[1]
+        item_name = item[0]
+        item_version = item[1]
+        item_count = item[2]
+
+        self.assertEqual(item_name, "Some App")
+        self.assertEqual(item_version, "12.1")
+        self.assertEqual(item_count, 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
