@@ -1,5 +1,6 @@
 
 import logging
+import sys
 
 logger = logging.getLogger('extra-metrics')
 

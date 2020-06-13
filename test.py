@@ -9,6 +9,7 @@ from prometheus_client import REGISTRY
 
 from application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
 from compliance import ClientCompliance
+from logs import init_logging
 import test_queries
 
 from test_queries import test_query_app_adobe_acrobat_reader_win,\
@@ -19,6 +20,8 @@ from test_queries import test_query_app_adobe_acrobat_reader_win,\
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
 
+# pointless, but who can blame me for wanting to get 100% coverage on my codebase? (and this found a bug!)
+init_logging()
 
 class FakeRequest:
     def __init__(self, string_data):
@@ -295,6 +298,8 @@ class ExtraMetricsTestCase(unittest.TestCase):
         app_mgr = ApplicationQueryManager(my_query)
         app_mgr.create_default_queries_in_group(test_queries.MAIN_GROUP_ID)
         self.assertEqual(9, len(loaded_data))
+        # for r in loaded_data:
+        #     print(r)
 
 
 class TestClientComplianceCase(unittest.TestCase):
