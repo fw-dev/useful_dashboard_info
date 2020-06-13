@@ -106,13 +106,14 @@ class ApplicationQueryManager:
         self.retrieve_all_queries_in_group(group_id)
 
     def collect_application_query_results(self):
-        for q in self.app_queries:
-            r = ApplicationUsageRollup(q["id"], ["Application_name", "Application_version"], "Client_device_id")
+        for q_id, q in self.app_queries.items():
+            r = ApplicationUsageRollup(q_id, ["Application_name", "Application_version"], "Client_device_id")
             r.exec(self.fw_query)
             
             # and of course, throw this into the metric we are exposing.
             for result in r.results():
                 name = result[0]
                 version = result[1]
-                total = result[3]
+                total = int(result[2])
+                #print(f"got app: {name}, version: {version}, total: {total}")
                 app_version_count.labels(name, version).set(total)                

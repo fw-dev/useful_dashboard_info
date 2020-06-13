@@ -1,4 +1,7 @@
 MAIN_GROUP_ID = 5
+MAIN_GROUP_NAME = "I am your Group"
+MAIN_GROUP_PARENT_ID = 433
+
 INVALID_GROUP = 55
 
 test_win_app_generic_should_not_load = '''
