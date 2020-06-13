@@ -1,2 +1,2 @@
 #!/bin/bash
-coverage run -m unittest test && coverage html
+coverage run --branch -m unittest test && coverage html

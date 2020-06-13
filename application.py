@@ -8,7 +8,7 @@ import concurrent.futures
 
 app_version_count = Gauge('extra_metrics_application_version',
     'a summary of how many devices are using a particular app & version',
-    ["application_name", "application_version"])
+    ["application_name", "application_version", "query_id"])
 
 
 """
@@ -89,7 +89,7 @@ class ApplicationQueryManager:
         for q in all_queries:
             q_group = q["group"]
             q_id = q["id"]
-            if q_group == group_id and ApplicationQueryManager.is_query_valid(q):
+            if q_group == group_id:
                 self.app_queries[q_id] = q
                 logger.info(f"refreshed app query {q_id}/{q['name']}")
 
@@ -108,12 +108,16 @@ class ApplicationQueryManager:
     def collect_application_query_results(self):
         for q_id, q in self.app_queries.items():
             r = ApplicationUsageRollup(q_id, ["Application_name", "Application_version"], "Client_device_id")
-            r.exec(self.fw_query)
-            
-            # and of course, throw this into the metric we are exposing.
-            for result in r.results():
-                name = result[0]
-                version = result[1]
-                total = int(result[2])
-                #print(f"got app: {name}, version: {version}, total: {total}")
-                app_version_count.labels(name, version).set(total)                
+
+            try:
+                r.exec(self.fw_query)
+                
+                # and of course, throw this into the metric we are exposing.
+                for result in r.results():
+                    name = result[0]
+                    version = result[1]
+                    total = int(result[2])
+                    #print(f"got app: {name}, version: {version}, total: {total}")
+                    app_version_count.labels(name, version, r.query_id).set(total)                
+            except Exception:
+                logger.error(f"failed to rollup on query id {q_id}")

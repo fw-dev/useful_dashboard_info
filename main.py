@@ -1,4 +1,5 @@
-from prometheus_client import start_http_server, Histogram, Gauge
+from prometheus_client import start_http_server, make_wsgi_app, Histogram, Gauge
+
 import logging
 import timeloop
 import pandas as pd
@@ -17,6 +18,14 @@ from fwrest import FWRestQuery
 from logs import logger, init_logging
 
 init_logging()
+
+# from flask import Flask
+# from werkzeug.middleware.dispatcher import DispatcherMiddleware
+# app = Flask(__name__)
+
+# app_dispatch = DispatcherMiddleware(app, {
+#     '/metrics': make_wsgi_app()
+# })
 
 fw_query = FWRestQuery(
     hostname = 'fwsrv.cluster8.tech',
@@ -60,7 +69,7 @@ device_checkin_days = Gauge('extra_metrics_devices_by_checkin_days',
     'various interesting stats on a per device basis, days since checked, compliance status', 
     ["days",])
 
-device_information = Gauge('extra_metrhics_per_device_information',
+device_information = Gauge('extra_metrics_per_device_information',
     'various interesting stats on a per device basis, days since checked, compliance status',
     ["device_name", "platform", "compliant", "tracked", "locked", "fw_client_version"])
 
@@ -248,7 +257,7 @@ def validate_and_collect_data():
 
 
 def serve_and_process():
-    # Serve those stats!
+    # be a web server... go on...
     start_http_server(8000)
 
     # collect the first chunk of info from our server

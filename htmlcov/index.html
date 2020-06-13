@@ -17,7 +17,7 @@
 <div id="header">
     <div class="content">
         <h1>Coverage report:
-            <span class="pc_cov">90%</span>
+            <span class="pc_cov">88%</span>
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <form id="filter_container">
@@ -34,6 +34,8 @@
         <span class="key">s</span>
         <span class="key">m</span>
         <span class="key">x</span>
+        <span class="key">b</span>
+        <span class="key">p</span>
         <span class="key">c</span> &nbsp; change column sorting
     </p>
     </div>
@@ -46,6 +48,8 @@
                 <th class="shortkey_s">statements</th>
                 <th class="shortkey_m">missing</th>
                 <th class="shortkey_x">excluded</th>
+                <th class="shortkey_b">branches</th>
+                <th class="shortkey_p">partial</th>
                 <th class="right shortkey_c">coverage</th>
             </tr>
         </thead>
@@ -55,7 +59,9 @@
                 <td>335</td>
                 <td>32</td>
                 <td>0</td>
-                <td class="right" data-ratio="303 335">90%</td>
+                <td>62</td>
+                <td>5</td>
+                <td class="right" data-ratio="348 397">88%</td>
             </tr>
         </tfoot>
         <tbody>
@@ -64,25 +70,33 @@
                 <td>75</td>
                 <td>1</td>
                 <td>0</td>
-                <td class="right" data-ratio="74 75">99%</td>
+                <td>26</td>
+                <td>2</td>
+                <td class="right" data-ratio="98 101">97%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="compliance_py.html">compliance.py</a></td>
                 <td>32</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="right" data-ratio="32 32">100%</td>
+                <td>12</td>
+                <td>0</td>
+                <td class="right" data-ratio="44 44">100%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="fwrest_py.html">fwrest.py</a></td>
                 <td>63</td>
                 <td>30</td>
                 <td>0</td>
-                <td class="right" data-ratio="33 63">52%</td>
+                <td>14</td>
+                <td>1</td>
+                <td class="right" data-ratio="34 77">44%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="logs_py.html">logs.py</a></td>
                 <td>10</td>
+                <td>0</td>
+                <td>0</td>
                 <td>0</td>
                 <td>0</td>
                 <td class="right" data-ratio="10 10">100%</td>
@@ -92,6 +106,8 @@
                 <td>3</td>
                 <td>0</td>
                 <td>0</td>
+                <td>0</td>
+                <td>0</td>
                 <td class="right" data-ratio="3 3">100%</td>
             </tr>
             <tr class="file">
@@ -99,11 +115,15 @@
                 <td>144</td>
                 <td>1</td>
                 <td>0</td>
-                <td class="right" data-ratio="143 144">99%</td>
+                <td>10</td>
+                <td>2</td>
+                <td class="right" data-ratio="151 154">98%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="test_queries_py.html">test_queries.py</a></td>
                 <td>8</td>
+                <td>0</td>
+                <td>0</td>
                 <td>0</td>
                 <td>0</td>
                 <td class="right" data-ratio="8 8">100%</td>
@@ -118,7 +138,7 @@
     <div class="content">
         <p>
             <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.1</a>,
-            created at 2020-06-13 21:32
+            created at 2020-06-13 21:39
         </p>
     </div>
 </div>

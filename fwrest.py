@@ -4,7 +4,7 @@ from queries import query_client_info, query_software_patches, query_client_info
 import json
 
 
-http_request_time_taken = Histogram('http_request_time_taken',
+http_request_time_taken = Histogram('extra_metrics_http_request_time_taken',
                                     'Response time (s)', ['method'])
 
 

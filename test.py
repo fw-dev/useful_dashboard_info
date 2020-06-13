@@ -39,7 +39,7 @@ class FakeQueryInteface:
         super()
 
     def create_inventory_query(self, json_obj):
-        if self.create_inventory_callback:
+        if self.create_inventory_callback: # pragma: no branch
             self.create_inventory_callback(json_obj)
 
     def ensure_inventory_query_group_exists(self, name_of_query):
