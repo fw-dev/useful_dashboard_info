@@ -12,7 +12,7 @@ from extra_metrics.application import ApplicationQueryManager, ApplicationUsageR
 from extra_metrics.compliance import ClientCompliance
 from extra_metrics.logs import init_logging
 
-from test_queries import *
+from .test_queries import *
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
@@ -45,7 +45,7 @@ class FakeQueryInteface:
             "name": "%s",
             "parent": %d,
             "id": %d
-        }''' % (test_queries.MAIN_GROUP_NAME, test_queries.MAIN_GROUP_PARENT_ID, test_queries.MAIN_GROUP_ID)
+        }''' % (MAIN_GROUP_NAME, MAIN_GROUP_PARENT_ID, MAIN_GROUP_ID)
         return json.loads(my_data), False
 
     def get_all_inventory_queries(self):
@@ -201,7 +201,7 @@ class ExtraMetricsTestCase(unittest.TestCase):
 
     def test_app_manager_doesnt_load_crap_queries(self):
         app_mgr = ApplicationQueryManager(fw_query)
-        app_mgr.retrieve_all_queries_in_group(test_queries.MAIN_GROUP_ID)
+        app_mgr.retrieve_all_queries_in_group(MAIN_GROUP_ID)
         self.assertEqual(len(app_mgr.app_queries), 2)
         self.assertTrue(120 not in app_mgr.app_queries.keys())
         self.assertTrue(101 in app_mgr.app_queries.keys())
@@ -293,7 +293,7 @@ class ExtraMetricsTestCase(unittest.TestCase):
 
         my_query = FakeQueryInteface(test_query_load)
         app_mgr = ApplicationQueryManager(my_query)
-        app_mgr.create_default_queries_in_group(test_queries.MAIN_GROUP_ID)
+        app_mgr.create_default_queries_in_group(MAIN_GROUP_ID)
         self.assertEqual(9, len(loaded_data))
         # for r in loaded_data:
         #     print(r)

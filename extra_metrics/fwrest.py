@@ -90,23 +90,3 @@ class FWRestQuery:
     def get_software_updates_web_ui(self):
         return requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
                             headers=self._auth_headers())
-
-    # @http_request_time_taken_get_applications.time()
-    # def get_win_applications(self):
-    #     return requests.post(self._fw_run_inv_query('query_result/'),
-    #                          headers=self._auth_headers(),
-    #                          data=query_win_applications)
-
-
-# if __name__ == "__main__":
-#     fw_query = FWRestQuery(
-#         hostname = 'fwsrv.cluster8.tech',
-#         api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
-#     )
-
-#     r = fw_query.get_results_for_query_id(109)
-#     if r.status_code == 200:
-#         j = r.json()
-#         print(json.dumps(j, indent=2))
-#     else:
-#         print("problem: ", r)

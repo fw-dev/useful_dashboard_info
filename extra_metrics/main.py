@@ -11,20 +11,12 @@ import os, json
 import datetime
 import threading
 
-from .application import ApplicationQueryManager
-from .compliance import ClientCompliance
-from .fwrest import FWRestQuery
-from .logs import logger, init_logging
+from extra_metrics.application import ApplicationQueryManager
+from extra_metrics.compliance import ClientCompliance
+from extra_metrics.fwrest import FWRestQuery
+from extra_metrics.logs import logger, init_logging
 
 init_logging()
-
-# from flask import Flask
-# from werkzeug.middleware.dispatcher import DispatcherMiddleware
-# app = Flask(__name__)
-
-# app_dispatch = DispatcherMiddleware(app, {
-#     '/metrics': make_wsgi_app()
-# })
 
 fw_query = FWRestQuery(
     hostname = 'fwsrv.cluster8.tech',
@@ -218,7 +210,7 @@ def collect_client_data():
             client_ver = v[DesktopClient_filewave_client_version]
             if client_ver is None:
                 client_ver = "Not Reported"
-            print(v)
+            # print(v)
 
             # TODO: when rolling this up, if we have another entry that is non-null in any of the columns
             # and this row IS null; drop this row, e.g. nuke duplicates - this work is pending tests in a larger environment. 
@@ -269,7 +261,4 @@ def serve_and_process():
     # just sit here being a web server...
     tl.start(block=True)
 
-# TODO: make this all run on setup.py - and maybe Flask with a single process task?
-if __name__ == "__main__":
-    serve_and_process()
 

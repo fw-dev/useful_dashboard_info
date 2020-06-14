@@ -1,4 +1,5 @@
 from prometheus_client import Gauge
+import pkg_resources
 import pandas as pd
 import os, json
 
@@ -73,14 +74,12 @@ class ApplicationQueryManager:
         return app_name and app_version and client_id
 
     def create_default_queries_in_group(self, group_id):
-        app_queries_dir = os.path.join(os.getcwd(), "app_queries")
-        # TODO: convert this to use package data resources https://setuptools.readthedocs.io/en/latest/setuptools.html#accessing-data-files-at-runtime
-        for query_file in os.listdir(app_queries_dir):
+        for query_file in pkg_resources.resource_listdir("extra_metrics", "app_queries"):
             if query_file.endswith(".json"):
-                with open(os.path.join(app_queries_dir, query_file)) as f:
-                    json_data = json.load(f)
-                    json_data["group"] = group_id
-                    self.fw_query.create_inventory_query(json.dumps(json_data))
+                f = pkg_resources.resource_string("extra_metrics.app_queries", query_file)
+                json_data = json.loads(f)
+                json_data["group"] = group_id
+                self.fw_query.create_inventory_query(json.dumps(json_data))
 
     def retrieve_all_queries_in_group(self, group_id):
         # in all cases - read all queries in this group and find their IDs, store in-mem for redirection 
