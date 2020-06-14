@@ -3,7 +3,7 @@ from prometheus_client import Gauge
 import os, json
 from fwrest import FWRestQuery
 from logs import logger
-import concurrent.futures
+from fwrest import http_request_time_taken
 
 
 app_version_count = Gauge('extra_metrics_application_version',
@@ -89,6 +89,8 @@ class ApplicationQueryManager:
         for q in all_queries:
             q_group = q["group"]
             q_id = q["id"]
+            # FIXME: I would really like to filter out queries that don't have the right rollup columns
+            # the is_query_valid method exists to do this; but I don't have the query definition to work with
             if q_group == group_id:
                 self.app_queries[q_id] = q
                 logger.info(f"refreshed app query {q_id}/{q['name']}")
@@ -110,14 +112,15 @@ class ApplicationQueryManager:
             r = ApplicationUsageRollup(q_id, ["Application_name", "Application_version"], "Client_device_id")
 
             try:
-                r.exec(self.fw_query)
+                label_name = f"app_query_{q['name']}"
+                with http_request_time_taken.labels(label_name).time():
+                    r.exec(self.fw_query)
                 
                 # and of course, throw this into the metric we are exposing.
                 for result in r.results():
                     name = result[0]
                     version = result[1]
                     total = int(result[2])
-                    #print(f"got app: {name}, version: {version}, total: {total}")
                     app_version_count.labels(name, version, r.query_id).set(total)                
             except Exception:
                 logger.error(f"failed to rollup on query id {q_id}")

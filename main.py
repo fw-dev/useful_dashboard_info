@@ -123,7 +123,10 @@ def collect_patch_data_via_web_ui():
     software_updates_by_state.labels('Error').set(counters["error"])
 
 '''
-For tomorrow: 
+TODO: get the software patches tied into clients. 
+TODO: why does the device by client version shown Unknown?
+
+For monday 15th June 2020: 
 
 To get software updates: use the test.py code
 
@@ -266,7 +269,7 @@ def serve_and_process():
     # just sit here being a web server...
     tl.start(block=True)
 
-
+# TODO: make this all run on setup.py - and maybe Flask with a single process task?
 if __name__ == "__main__":
     serve_and_process()
 

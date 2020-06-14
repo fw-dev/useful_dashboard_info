@@ -1,6 +1,7 @@
 import requests
 from prometheus_client import Histogram
-from queries import query_client_info, query_software_patches, query_client_info, query_win_applications
+from logs import logging
+from queries import query_client_info, query_software_patches, query_client_info
 import json
 
 
@@ -53,7 +54,7 @@ class FWRestQuery:
             return existing_group, False
 
         group_create_data = json.dumps({"name": group_name})
-        print(f"data payload is: {group_create_data}")
+        (f"data payload is: {group_create_data}")
         r = requests.post(self._fw_run_web_query('reports/groups/'),
                           headers=self._auth_headers(),
                           data=group_create_data)
@@ -90,22 +91,22 @@ class FWRestQuery:
         return requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
                             headers=self._auth_headers())
 
-    @http_request_time_taken_get_applications.time()
-    def get_win_applications(self):
-        return requests.post(self._fw_run_inv_query('query_result/'),
-                             headers=self._auth_headers(),
-                             data=query_win_applications)
+    # @http_request_time_taken_get_applications.time()
+    # def get_win_applications(self):
+    #     return requests.post(self._fw_run_inv_query('query_result/'),
+    #                          headers=self._auth_headers(),
+    #                          data=query_win_applications)
 
 
-if __name__ == "__main__":
-    fw_query = FWRestQuery(
-        hostname = 'fwsrv.cluster8.tech',
-        api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
-    )
+# if __name__ == "__main__":
+#     fw_query = FWRestQuery(
+#         hostname = 'fwsrv.cluster8.tech',
+#         api_key = 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0='
+#     )
 
-    r = fw_query.get_results_for_query_id(109)
-    if r.status_code == 200:
-        j = r.json()
-        print(json.dumps(j, indent=2))
-    else:
-        print("problem: ", r)
+#     r = fw_query.get_results_for_query_id(109)
+#     if r.status_code == 200:
+#         j = r.json()
+#         print(json.dumps(j, indent=2))
+#     else:
+#         print("problem: ", r)

@@ -52,6 +52,7 @@ test_win_app_generic_should_not_load = '''
         }
     ],
     "main_component": "Application",
+    "name": "generic query",
     "id": 100,
     "group": %d
 }
@@ -231,7 +232,7 @@ test_query_app_wrong_group_zoom_win = '''{
     ],
     "group": %d,
     "main_component": "Application",
-    "name": "Zoom Win",
+    "name": "Zoom Win wrong group",
     "id": 120,
     "favorite": false
 }''' % INVALID_GROUP

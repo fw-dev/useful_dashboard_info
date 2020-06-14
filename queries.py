@@ -1,54 +1,54 @@
-query_win_applications = '''
-{
-    "criteria": {
-        "expressions": [
-            {
-                "column": "type",
-                "component": "OperatingSystem",
-                "operator": "is",
-                "qualifier": "WIN"
-            }
-        ],
-        "logic": "all"
-    },
-    "fields": [
-        {
-            "column": "product_id",
-            "component": "Application"
-        },
-        {
-            "column": "name",
-            "component": "Application"
-        },
-        {
-            "column": "version",
-            "component": "Application"
-        },
-        {
-            "column": "size",
-            "component": "Application"
-        },
-        {
-            "column": "install_size",
-            "component": "Application"
-        },
-        {
-            "column": "is_validated",
-            "component": "Application"
-        },
-        {
-            "column": "device_id",
-            "component": "Client"
-        },
-        {
-            "column": "device_name",
-            "component": "Client"
-        }
-    ],
-    "main_component": "Application",
-    "display_name": "extra metrics - win applications"
-}
-'''
+# query_win_applications = '''
+# {
+#     "criteria": {
+#         "expressions": [
+#             {
+#                 "column": "type",
+#                 "component": "OperatingSystem",
+#                 "operator": "is",
+#                 "qualifier": "WIN"
+#             }
+#         ],
+#         "logic": "all"
+#     },
+#     "fields": [
+#         {
+#             "column": "product_id",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "name",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "version",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "size",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "install_size",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "is_validated",
+#             "component": "Application"
+#         },
+#         {
+#             "column": "device_id",
+#             "component": "Client"
+#         },
+#         {
+#             "column": "device_name",
+#             "component": "Client"
+#         }
+#     ],
+#     "main_component": "Application",
+#     "display_name": "extra metrics - win applications"
+# }
+# '''
 
 query_client_info = '''{
     "criteria": {
