@@ -1,9 +1,9 @@
-import pandas as pd
 from prometheus_client import Gauge
+import pandas as pd
 import os, json
-from fwrest import FWRestQuery
-from logs import logger
-from fwrest import http_request_time_taken
+
+from .fwrest import FWRestQuery, http_request_time_taken
+from .logs import logger
 
 
 app_version_count = Gauge('extra_metrics_application_version',
@@ -74,6 +74,7 @@ class ApplicationQueryManager:
 
     def create_default_queries_in_group(self, group_id):
         app_queries_dir = os.path.join(os.getcwd(), "app_queries")
+        # TODO: convert this to use package data resources https://setuptools.readthedocs.io/en/latest/setuptools.html#accessing-data-files-at-runtime
         for query_file in os.listdir(app_queries_dir):
             if query_file.endswith(".json"):
                 with open(os.path.join(app_queries_dir, query_file)) as f:

@@ -1,4 +1,5 @@
-from fwrest import FWRestQuery
+from extra_metrics.fwrest import FWRestQuery
+
 import json
 import sys
 import os
@@ -7,15 +8,11 @@ import unittest
 
 from prometheus_client import REGISTRY
 
-from application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
-from compliance import ClientCompliance
-from logs import init_logging
-import test_queries
+from extra_metrics.application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
+from extra_metrics.compliance import ClientCompliance
+from extra_metrics.logs import init_logging
 
-from test_queries import test_query_app_adobe_acrobat_reader_win,\
-    test_win_app_generic_should_not_load,\
-    test_query_app_wrong_group_zoom_win,\
-    test_query_app_zoom_win
+from test_queries import *
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)

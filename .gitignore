@@ -9,4 +9,6 @@ filewave-backfill/prometheus-2.19.0.darwin-amd64
 filewave-backfill/done
 filewave-backfill/backfill_done
 .vscode/.ropeproject/objectdb
-.vscode/.ropeproject/objectdb
+build/**
+dist/**
+filewave_extra_metrics.egg-info/**

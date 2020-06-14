@@ -11,11 +11,10 @@ import os, json
 import datetime
 import threading
 
-from application import ApplicationQueryManager
-from compliance import ClientCompliance
-from fwrest import FWRestQuery
-
-from logs import logger, init_logging
+from .application import ApplicationQueryManager
+from .compliance import ClientCompliance
+from .fwrest import FWRestQuery
+from .logs import logger, init_logging
 
 init_logging()
 
@@ -124,7 +123,6 @@ def collect_patch_data_via_web_ui():
 
 '''
 TODO: get the software patches tied into clients. 
-TODO: why does the device by client version shown Unknown?
 
 For monday 15th June 2020: 
 
@@ -216,12 +214,14 @@ def collect_client_data():
                 checkin_days
             )
 
+            # if the client version is None, we'll assume its simply not reported... could change the query too I suppose to exclude those 
             client_ver = v[DesktopClient_filewave_client_version]
             if client_ver is None:
-                client_ver = "Unknown"
+                client_ver = "Not Reported"
+            print(v)
 
             # TODO: when rolling this up, if we have another entry that is non-null in any of the columns
-            # and this row IS null; drop this row. 
+            # and this row IS null; drop this row, e.g. nuke duplicates - this work is pending tests in a larger environment. 
             device_information.labels(
                 v[Client_device_name],
                 v[OperatingSystem_name],

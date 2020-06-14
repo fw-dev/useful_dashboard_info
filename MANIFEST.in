@@ -1,0 +1,3 @@
+graft extra_metrics/app_queries
+graft extra_metrics/dashboards
+graft extra_metrics/cfg

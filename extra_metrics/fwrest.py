@@ -1,7 +1,7 @@
 import requests
 from prometheus_client import Histogram
-from logs import logging
-from queries import query_client_info, query_software_patches, query_client_info
+from .logs import logging
+from .queries import query_client_info, query_software_patches, query_client_info
 import json
 
 
