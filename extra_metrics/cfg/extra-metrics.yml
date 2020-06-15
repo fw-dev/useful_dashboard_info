@@ -1,3 +1,0 @@
-- targets: ['localhost:8000']
-  labels:
-    job: "extra-metrics"
