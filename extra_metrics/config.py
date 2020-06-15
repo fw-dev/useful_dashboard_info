@@ -19,6 +19,7 @@ class ExtraMetricsConfiguration:
     DEFAULT_CFG_FILE_LOCATION = '/usr/local/etc/filewave/extra_metrics.ini'
     KEY_FW_SERVER_HOSTNAME = 'fw_server_hostname'
     KEY_FW_SERVER_API_KEY = 'fw_server_api_key'
+    KEY_POLLING_DELAY = 'fw_query_polling_delay_seconds'
 
     def __init__(self):
         self.config = configparser.ConfigParser()
@@ -45,3 +46,9 @@ class ExtraMetricsConfiguration:
         return self._get_value(ExtraMetricsConfiguration.KEY_FW_SERVER_API_KEY)
     def set_fw_api_key(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_FW_SERVER_API_KEY, value)
+
+    def get_polling_delay_seconds(self):    
+        # default is 5 mins
+        return self._get_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, 60 * 5)
+    def set_polling_delay_seconds(self, value):
+        self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, value)
