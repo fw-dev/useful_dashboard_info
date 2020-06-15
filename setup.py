@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="filewave-extra-metrics", 
-    version="1.0.0",
+    version="1.0.3",
     author="John Clayton",
     author_email="johnc@filewave.com",
     description="An additional module that exposes s/ware patching and metrics information to the built in FileWave dashboard",
@@ -16,8 +16,8 @@ setuptools.setup(
     include_package_data=True,
     entry_points = {
         'console_scripts': [
-            'extra-metrics-install=extra_metrics.scripts:install_into_environment',
-            'extra-metrics-run=extra_metrics.scripts:run_test_server',
+            'extra-metrics-config=extra_metrics.scripts:install_into_environment',
+            'extra-metrics-run=extra_metrics.main:serve_and_process',
         ]
     },
     install_requires=[

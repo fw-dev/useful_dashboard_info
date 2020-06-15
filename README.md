@@ -1,12 +1,8 @@
 # FileWave Extra Metrics
 The purpose of Extra Metrics is to augment a standard FileWave installation with additional metrics and dashboard capabilities. 
 
-_TODO: get the dashboards loaded (via a command?) into the system, likely prompt the user or just import them during configuration, will need another API key for that?  If running on fwxserver, can we work out that API key?  Importing *might* be as simple as jamming the files into the provisioning directory actually_
-
 # Overview
 Extra Metrics provides a series of dashboards related to how your fleet's deployments are progressing.  The information is intended to show "at-a-glance" insights into the software patch status, device health and user specific deployments.
-
-_TODO: screen shots in the readme._
 
 ## Software Patch Status
 The software update (patch status) of clients is calculated using software  update catalogs as well as information delivered by clients about the updates they require. 
@@ -22,10 +18,7 @@ The whole fleet of devices is continuously sending data back to the FileWave Inv
 Panels provided: 
 - Device health summary - a grouping of all devices by health state.  The health of a device is calculated as follows: 
  - TBD (disk space, outstanding patches)
- - _TODO: show the reasons/state of health of a device in custom fields so it can be reported on_
- - _TODO: consider alerts for devices entering a non-healthy state for the first time today_
-
-
+ 
 # Installation
 Extra Metrics can be installed into any Python3 system using pip.  These instructions assume you will be installing Extra Metrics on your FileWave Server, which already has Python3.7 (or later) installed.
 
@@ -45,9 +38,9 @@ Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
 ## Configure FileWave to pull information from the Extra Metrics module
 The Extra Metrics module contains commands to inject the appropriate configuration into your FileWave system automatically. 
 
-To ensure the FileWave Dashboard system is pulling data from Extra Metrics; run the following command:
+The check/insert the configuration, inject dashboards and generally validate that the system will work - run this command after installation; it will tell you what is missing:
 
-    $ extra-metrics-install-prometheus-config
+    $ extra-metrics-config 
 
 Create & configure an Inventory API Key
 -
@@ -59,10 +52,9 @@ Note: ** please create a unique access token (API Key) for the Extra Metrics mod
 
 Once you have the API key; use the following command: 
 
-  $ extra-metrics-configure --api-key 'ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=' --external-dns-name 'fwsrv.cluster8.tech'
-
-_TODO: write the commands for this using click and store/use the configuration_
+  $ extra-metrics-config --api-key 'EzblNWflNTYwLtQzZWEtNDMwYc1iNTa1LTlmZTkxODFjODAyNH0=' --external-dns-name 'fwserver.mydomain.com'
 
 Reference
 =
 Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
+

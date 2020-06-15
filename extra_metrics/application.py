@@ -125,8 +125,8 @@ class ApplicationQueryManager:
                     name = result[0]
                     version = result[1]
                     total = int(result[2])
-                    logger.info(f"result for {name}, {version}, query_id: {r.query_id} = {total}")
+                    logger.info(f"app query result for {name}, {version}, query_id: {r.query_id} = {total}")
                     app_version_count.labels(name, version, r.query_id).set(total)                
             except Exception as e:
-                logger.error(f"failed to rollup on query id {q_id}, {e}")
+                logger.error(f"failed to do app query rollup on query id {q_id}, {e}")
                 traceback.print_exc(file=sys.stdout)

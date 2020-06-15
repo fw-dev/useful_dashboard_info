@@ -3,6 +3,7 @@ from extra_metrics.fwrest import FWRestQuery
 import json
 import sys
 import os
+import io
 import pandas as pd
 import unittest
 
@@ -11,7 +12,7 @@ from prometheus_client import REGISTRY
 from extra_metrics.application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
 from extra_metrics.compliance import ClientCompliance
 from extra_metrics.logs import init_logging
-
+from extra_metrics.config import ExtraMetricsConfiguration
 from .test_queries import *
 
 pd.set_option('display.precision', 3)
@@ -383,12 +384,17 @@ class TestClientComplianceCase(unittest.TestCase):
                          ClientCompliance.STATE_UNKNOWN)
 
     def test_compliance_patch_status_ok(self):
-        c = ClientCompliance(None, None, None, 0)
+        c = ClientCompliance(None, None, None, 0, 0)
         self.assertEqual(c.get_patch_compliance(),
                          ClientCompliance.STATE_OK)
 
     def test_compliance_patch_status_failure(self):
-        c = ClientCompliance(None, None, None, 1)
+        # 1 critical package, no other packages
+        c = ClientCompliance(None, None, None, 1, 0)
+        self.assertEqual(c.get_patch_compliance(),
+                         ClientCompliance.STATE_ERROR)
+        # 0 critical packages, 1 other package
+        c = ClientCompliance(None, None, None, 0, 1)  
         self.assertEqual(c.get_patch_compliance(),
                          ClientCompliance.STATE_WARNING)
 
@@ -434,6 +440,29 @@ class TestClientComplianceCase(unittest.TestCase):
         self.assertTrue(c2.get_checkin_compliance() > c1.get_disk_compliance())
         self.assertEqual(c2.get_compliance_state(),
                          ClientCompliance.STATE_ERROR)
+
+
+class TestConfiguration(unittest.TestCase):
+    def setUp(self):
+        self.cfg = ExtraMetricsConfiguration()
+        self.config_text = '''
+            [extra_metrics]
+            fw_server_hostname = abc
+            fw_server_api_key = def
+            '''
+        buf = io.StringIO(self.config_text)
+        self.cfg.read_configuration(buf)
+
+    def test_configuration_defaults(self):
+        self.assertEqual("abc", self.cfg.get_fw_api_server())
+        self.assertEqual("def", self.cfg.get_fw_api_key())
+
+    def test_configuration_changes_are_written(self):
+        self.cfg.set_fw_api_key('hello world')
+        buf = io.StringIO()
+        self.cfg.write_configuration(buf)
+        value = buf.getvalue()
+        self.assertTrue("hello world" in value)
 
 
 if __name__ == "__main__":

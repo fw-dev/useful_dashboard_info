@@ -9,19 +9,24 @@ class ClientCompliance:
     STATE_WARNING = 2
     STATE_ERROR = 3
 
-    def __init__(self, total_disk, free_disk, last_checkin_days, outstanding_patches = None):
+    def __init__(self, total_disk, free_disk, last_checkin_days, outstanding_critical_patches = -1, outstanding_standard_patches = -1):
         self.total_disk = total_disk
         self.free_disk = free_disk
         self.last_checkin_days = last_checkin_days
-        self.outstanding_patches = outstanding_patches
+        self.outstanding_critical_patches = outstanding_critical_patches
+        self.outstanding_standard_patches = outstanding_standard_patches
 
     def get_patch_compliance(self):
-        if self.outstanding_patches == None:
-            return ClientCompliance.STATE_UNKNOWN
-        if self.outstanding_patches == 0:
+        if self.outstanding_critical_patches == 0 and self.outstanding_standard_patches == 0:
             return ClientCompliance.STATE_OK
-        if self.outstanding_patches > 0:
+
+        if self.outstanding_critical_patches > 0:
+            return ClientCompliance.STATE_ERROR
+
+        if self.outstanding_standard_patches > 0:
             return ClientCompliance.STATE_WARNING
+
+        return ClientCompliance.STATE_UNKNOWN
 
     def get_checkin_compliance(self):
         if self.last_checkin_days is None:
