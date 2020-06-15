@@ -19,6 +19,8 @@ http_request_time_taken_get_software_updates_web = http_request_time_taken.label
     'get_software_updates_web')
 
 
+# TODO: all these methods should return either s or json, but how is one supposed to know from the name?
+
 class FWRestQuery:
     def __init__(self, hostname, api_key):
         self.hostname = hostname
@@ -33,6 +35,13 @@ class FWRestQuery:
 
     def _auth_headers(self):
         return {'Authorization': self.api_key, 'Content-Type': 'application/json'}
+
+    def get_definition_for_query_id_j(self, query_id):
+        r = requests.get(self._fw_run_inv_query(f'query/{query_id}'),
+                             headers=self._auth_headers())
+        if r.status_code == 200:
+            return json.loads(r.content)
+        return None
 
     def get_results_for_query_id(self, query_id):
         return requests.get(self._fw_run_inv_query(f'query_result/{query_id}'),
@@ -55,9 +64,9 @@ class FWRestQuery:
 
         group_create_data = json.dumps({"name": group_name})
         (f"data payload is: {group_create_data}")
-        r = requests.post(self._fw_run_web_query('reports/groups/'),
-                          headers=self._auth_headers(),
-                          data=group_create_data)
+        requests.post(self._fw_run_web_query('reports/groups/'),
+                        headers=self._auth_headers(),
+                        data=group_create_data)
 
         return self.find_group_with_name(group_name), True
 

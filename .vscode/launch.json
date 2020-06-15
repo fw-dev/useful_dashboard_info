@@ -10,6 +10,16 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Run Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "tests.test",
+            "env": {
+                "PYTHONPATH": "${workspaceFolderBasename}"
+            },
+            "console": "integratedTerminal"
         }
     ]
 }

@@ -20,6 +20,7 @@ pd.set_option('display.expand_frame_repr', False)
 # pointless, but who can blame me for wanting to get 100% coverage on my codebase? (and this found a bug!)
 init_logging()
 
+
 class FakeRequest:
     def __init__(self, string_data):
         self.data = string_data
@@ -30,13 +31,16 @@ class FakeRequest:
 
 class FakeQueryInteface:
     TEST_QUERY_APPS = 1
+    TEST_QUERY_DATA_INVALID = 99
+    TEST_QUERY_DATA_ALMOST_VALID1 = 98
+    TEST_QUERY_DATA_ALMOST_VALID2 = 97
 
     def __init__(self, create_inventory_callback=None):
         self.create_inventory_callback = create_inventory_callback
         super()
 
     def create_inventory_query(self, json_obj):
-        if self.create_inventory_callback: # pragma: no branch
+        if self.create_inventory_callback:  # pragma: no branch
             self.create_inventory_callback(json_obj)
 
     def ensure_inventory_query_group_exists(self, name_of_query):
@@ -57,6 +61,105 @@ class FakeQueryInteface:
 
         return [json.loads(t) for t in text_queries]
 
+    def get_definition_for_query_id_j(self, q_id):
+        if q_id == FakeQueryInteface.TEST_QUERY_DATA_INVALID:
+            return None
+
+        if q_id == FakeQueryInteface.TEST_QUERY_DATA_ALMOST_VALID1:
+            badly_formed_query = '''{
+                "favorite": true,
+                "fields": [
+                    {
+                        "column": "filewave_id",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "filewave_client_name",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "version",
+                        "component": "Update"
+                    }
+                ],
+                "main_component": "Update"
+                }'''
+            return json.loads(badly_formed_query)
+
+        if q_id == FakeQueryInteface.TEST_QUERY_DATA_ALMOST_VALID2:
+            badly_formed_query = '''{
+                "favorite": true,
+                "fields": [
+                    {
+                        "column": "filewave_id",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "filewave_client_name",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "version",
+                        "component": "Update"
+                    }
+                ],
+                "name": "this has a name",
+                "main_component": "Update"
+                }'''
+            return json.loads(badly_formed_query)
+
+        if q_id == 66:
+            badly_formed_query = '''{
+                "favorite": true,
+                "fields": [
+                    {
+                        "column": "filewave_id",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "filewave_client_name",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "version",
+                        "component": "Update"
+                    }
+                ],
+                "main_component": "Update",
+                "id": 66,
+                "name": "extra metrics - software patch"
+                }'''
+            return json.loads(badly_formed_query)
+
+        if q_id == 55:
+            well_formed_query = '''{
+                "favorite": true,
+                "fields": [
+                    {
+                        "column": "device_id",
+                        "component": "Client"
+                    },
+                    {
+                        "column": "name",
+                        "component": "Application"
+                    },
+                    {
+                        "column": "version",
+                        "component": "Application"
+                    }
+                ],
+                "main_component": "Update",
+                "name": "extra metrics - software patch",
+                "id": 55
+            }'''
+            return json.loads(well_formed_query)
+
+        all_queries = self.get_all_inventory_queries()
+        for a_query in all_queries:
+            if a_query["id"] == q_id:
+                return a_query
+        return None
+
     def get_results_for_query_id(self, query_id):
         if query_id == 105:
             return FakeRequest('''{
@@ -74,7 +177,7 @@ class FakeQueryInteface:
                 "values": [
                     [
                         "{abcdefg}",
-                        "Some App",
+                        "Zoom",
                         "12.1",
                         null,
                         6459167232,
@@ -125,7 +228,7 @@ class FakeQueryInteface:
                 "values": [
                     [
                         "{abcdefg}",
-                        "Some App",
+                        "Adobe Acrobat Reader DC",
                         "12.1",
                         null,
                         6459167232,
@@ -184,13 +287,15 @@ class ExtraMetricsTestCase(unittest.TestCase):
         app_mgr.collect_application_query_results()
 
         after = REGISTRY.get_sample_value('extra_metrics_application_version',
-                                          labels={"application_name": "Adobe Acrobat Reader DC", "application_version": "20.009.20067"})
-        self.assertEqual(2, after)
-        after = REGISTRY.get_sample_value('extra_metrics_application_version',
-                                          labels={"application_name": "Some App", "application_version": "12.1"})
+                                          labels={"application_name": "Adobe Acrobat Reader DC", "application_version": "12.1", "query_id": "101"})
         self.assertEqual(1, after)
+
         after = REGISTRY.get_sample_value('extra_metrics_application_version',
-                                          labels={"application_name": "Zoom", "application_version": "20"})
+                                          labels={"application_name": "Adobe Acrobat Reader DC", "application_version": "20.009.20067", "query_id": "101"})
+        self.assertEqual(2, after)
+
+        after = REGISTRY.get_sample_value('extra_metrics_application_version',
+                                          labels={"application_name": "Zoom App", "application_version": "20.1", "query_id": "105"})
         self.assertEqual(1, after)
 
     def test_app_manager_query_validation(self):
@@ -198,6 +303,12 @@ class ExtraMetricsTestCase(unittest.TestCase):
         self.assertEqual(len(app_mgr.app_queries), 0)
         app_mgr.validate_query_definitions()
         self.assertEqual(len(app_mgr.app_queries), 2)
+
+    def test_app_manager_invalid_query_cannot_validate(self):
+        app_mgr = ApplicationQueryManager(fw_query)
+        self.assertFalse(app_mgr.is_query_valid(FakeQueryInteface.TEST_QUERY_DATA_INVALID))
+        self.assertFalse(app_mgr.is_query_valid(FakeQueryInteface.TEST_QUERY_DATA_ALMOST_VALID1))
+        self.assertFalse(app_mgr.is_query_valid(FakeQueryInteface.TEST_QUERY_DATA_ALMOST_VALID2))
 
     def test_app_manager_doesnt_load_crap_queries(self):
         app_mgr = ApplicationQueryManager(fw_query)
@@ -208,54 +319,13 @@ class ExtraMetricsTestCase(unittest.TestCase):
         self.assertTrue(105 in app_mgr.app_queries.keys())
 
     def test_app_mgr_accepts_valid_inventory_query(self):
-        well_formed_query = '''{
-            "favorite": true,
-            "fields": [
-                {
-                    "column": "device_id",
-                    "component": "Client"
-                },
-                {
-                    "column": "name",
-                    "component": "Application"
-                },
-                {
-                    "column": "version",
-                    "component": "Application"
-                }
-            ],
-            "main_component": "Update",
-            "name": "extra metrics - software patch",
-            "id": 55
-        }'''
-
-        result = ApplicationQueryManager.is_query_valid(
-            json.loads(well_formed_query))
+        app_mgr = ApplicationQueryManager(fw_query)
+        result = app_mgr.is_query_valid(55)
         self.assertTrue(result)
 
     def test_app_mgr_rejects_invalid_inventory_query(self):
-        badly_formed_query = '''{
-            "favorite": true,
-            "fields": [
-                {
-                    "column": "filewave_id",
-                    "component": "Client"
-                },
-                {
-                    "column": "filewave_client_name",
-                    "component": "Client"
-                },
-                {
-                    "column": "version",
-                    "component": "Update"
-                }
-            ],
-            "main_component": "Update",
-            "name": "extra metrics - software patch"
-        }'''
-
-        result = ApplicationQueryManager.is_query_valid(
-            json.loads(badly_formed_query))
+        app_mgr = ApplicationQueryManager(fw_query)
+        result = app_mgr.is_query_valid(66)
         self.assertFalse(result)
 
     def test_app_rollup(self):
@@ -273,20 +343,21 @@ class ExtraMetricsTestCase(unittest.TestCase):
         item_count = item[2]
 
         self.assertEqual(item_name, "Adobe Acrobat Reader DC")
-        self.assertEqual(item_version, "20.009.20067")
-        self.assertEqual(item_count, 2)
+        self.assertEqual(item_version, "12.1")
+        self.assertEqual(item_count, 1)
 
         item = r[1]
         item_name = item[0]
         item_version = item[1]
         item_count = item[2]
 
-        self.assertEqual(item_name, "Some App")
-        self.assertEqual(item_version, "12.1")
-        self.assertEqual(item_count, 1)
+        self.assertEqual(item_name, "Adobe Acrobat Reader DC")
+        self.assertEqual(item_version, "20.009.20067")
+        self.assertEqual(item_count, 2)
 
     def test_app_mgr_can_create_queries(self):
         loaded_data = []
+
         def test_query_load(json_data):
             nonlocal loaded_data
             loaded_data.append(json_data)
@@ -308,6 +379,18 @@ class TestClientComplianceCase(unittest.TestCase):
                          ClientCompliance.STATE_UNKNOWN)
         self.assertEqual(c.get_compliance_state(),
                          ClientCompliance.STATE_UNKNOWN)
+        self.assertEqual(c.get_patch_compliance(),
+                         ClientCompliance.STATE_UNKNOWN)
+
+    def test_compliance_patch_status_ok(self):
+        c = ClientCompliance(None, None, None, 0)
+        self.assertEqual(c.get_patch_compliance(),
+                         ClientCompliance.STATE_OK)
+
+    def test_compliance_patch_status_failure(self):
+        c = ClientCompliance(None, None, None, 1)
+        self.assertEqual(c.get_patch_compliance(),
+                         ClientCompliance.STATE_WARNING)
 
     def test_compliance_checkin_less_than_7_is_ok(self):
         c = ClientCompliance(None, None, 6)

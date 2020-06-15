@@ -116,6 +116,8 @@ def collect_patch_data_via_web_ui():
 '''
 TODO: get the software patches tied into clients. 
 
+TODO: create a health metric per client, based on the s/ware patch values - adjust client compliance + unit tests
+
 For monday 15th June 2020: 
 
 To get software updates: use the test.py code

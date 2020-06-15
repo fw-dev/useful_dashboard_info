@@ -1,4 +1,6 @@
 from prometheus_client import Gauge
+
+import traceback
 import pkg_resources
 import pandas as pd
 import os, json
@@ -48,11 +50,15 @@ class ApplicationQueryManager:
         self.fw_query = fw_query
         self.app_queries = {}
 
-    @staticmethod 
-    def is_query_valid(json_query):
+    def is_query_valid(self, q_id):
         app_name = False
         app_version = False
         client_id = False
+
+        # fetch the query def
+        json_query = self.fw_query.get_definition_for_query_id_j(q_id)
+        if json_query is None:
+            return False
 
         # requires id/name too
         if "name" not in json_query:
@@ -89,9 +95,7 @@ class ApplicationQueryManager:
         for q in all_queries:
             q_group = q["group"]
             q_id = q["id"]
-            # FIXME: I would really like to filter out queries that don't have the right rollup columns
-            # the is_query_valid method exists to do this; but I don't have the query definition to work with
-            if q_group == group_id:
+            if q_group == group_id and self.is_query_valid(q_id):
                 self.app_queries[q_id] = q
                 logger.info(f"refreshed app query {q_id}/{q['name']}")
 
@@ -121,6 +125,8 @@ class ApplicationQueryManager:
                     name = result[0]
                     version = result[1]
                     total = int(result[2])
+                    logger.info(f"result for {name}, {version}, query_id: {r.query_id} = {total}")
                     app_version_count.labels(name, version, r.query_id).set(total)                
-            except Exception:
-                logger.error(f"failed to rollup on query id {q_id}")
+            except Exception as e:
+                logger.error(f"failed to rollup on query id {q_id}, {e}")
+                traceback.print_exc(file=sys.stdout)

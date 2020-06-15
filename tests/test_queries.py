@@ -43,10 +43,6 @@ test_win_app_generic_should_not_load = '''
             "component": "Application"
         },
         {
-            "column": "device_id",
-            "component": "Client"
-        },
-        {
             "column": "device_name",
             "component": "Client"
         }
