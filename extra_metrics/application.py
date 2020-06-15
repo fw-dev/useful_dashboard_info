@@ -3,7 +3,7 @@ from prometheus_client import Gauge
 import traceback
 import pkg_resources
 import pandas as pd
-import os, json
+import os, json, sys
 
 from .fwrest import FWRestQuery, http_request_time_taken
 from .logs import logger
