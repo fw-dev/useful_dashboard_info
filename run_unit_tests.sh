@@ -1,3 +1,3 @@
 #!/bin/bash
-# export PYTHONPATH=$CWD:$PYTHONPATH
-coverage run --branch -m unittest tests.test && coverage html
+export PYTHONPATH=$CWD:$PYTHONPATH
+coverage run --branch -m unittest discover && coverage html

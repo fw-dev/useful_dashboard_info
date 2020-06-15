@@ -29,6 +29,9 @@ setuptools.setup(
         'progressbar2',
         'timeloop'
     ],
+    setup_requires=[
+        'wheel'
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

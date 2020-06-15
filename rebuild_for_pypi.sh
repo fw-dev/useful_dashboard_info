@@ -1,3 +1,6 @@
 #!/bin/bash
-rm dist/*
-python3 setup.py sdist bdist_wheel
+if [ -d dist ]; then
+    rm dist/*
+fi
+
+python setup.py sdist bdist_wheel

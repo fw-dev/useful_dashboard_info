@@ -1,21 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_FILEWAVE_PROMETHEUS",
-      "label": "FileWave Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "VAR_SERVER",
-      "type": "constant",
-      "label": "Server",
-      "value": "fwsrv.cluster8.tech",
-      "description": ""
-    }
-  ],
   "__requires": [
     {
       "type": "panel",
@@ -95,7 +78,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -179,7 +162,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Shows a breakdown of managed devices by FileWave Client version number.",
       "fontSize": "80%",
       "format": "short",
@@ -213,7 +196,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "count(extra_metrics_per_device_information) by (fw_client_version)",
+          "expr": "sum(extra_metrics_per_device_client_version) by (fw_client_version)",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{fw_client_version}}",
@@ -234,7 +217,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "decimals": null,
       "description": "",
       "fontSize": "80%",
@@ -266,7 +249,7 @@
       "strokeWidth": "1",
       "targets": [
         {
-          "expr": "count(extra_metrics_per_device_information) by (platform)",
+          "expr": "sum(extra_metrics_per_device_platform) by (platform)",
           "instant": true,
           "legendFormat": "{{platform}}",
           "refId": "A"
@@ -280,7 +263,7 @@
     },
     {
       "collapsed": true,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -294,7 +277,7 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+          "datasource": "FileWave Prometheus",
           "description": "",
           "fill": 1,
           "fillGradient": 0,
@@ -383,7 +366,7 @@
     },
     {
       "collapsed": false,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -401,7 +384,7 @@
       "cacheTimeout": null,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "",
       "fill": 1,
       "fillGradient": 0,
@@ -525,7 +508,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "",
       "format": "none",
       "gauge": {
@@ -581,7 +564,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(extra_metrics_per_device_information{tracked=\"True\"})  ",
+          "expr": "sum(extra_metrics_per_device_tracked{tracked=\"True\"})  ",
           "instant": false,
           "refId": "A"
         }
@@ -603,7 +586,7 @@
     },
     {
       "collapsed": false,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -616,7 +599,7 @@
       "type": "row"
     },
     {
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -702,7 +685,7 @@
       {
         "allValue": null,
         "current": {},
-        "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+        "datasource": "FileWave Prometheus",
         "definition": "filewave_associations",
         "hide": 0,
         "includeAll": true,
@@ -731,6 +714,7 @@
         "name": "server",
         "options": [
           {
+            "selected": true,
             "value": "${VAR_SERVER}",
             "text": "${VAR_SERVER}"
           }

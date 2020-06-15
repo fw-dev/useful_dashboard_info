@@ -1,21 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_FILEWAVE_PROMETHEUS",
-      "label": "FileWave Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "VAR_SERVER",
-      "type": "constant",
-      "label": "Server",
-      "value": "fwsrv.cluster8.tech",
-      "description": ""
-    }
-  ],
   "__requires": [
     {
       "type": "grafana",
@@ -96,7 +79,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Shows software patches grouped by state / progress",
       "fontSize": "80%",
       "format": "short",
@@ -145,7 +128,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Shows the number of devices over time, grouped by their patch status.  You can use this to track progress over time.",
       "fill": 3,
       "fillGradient": 3,
@@ -249,7 +232,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Total proportion of updates by platform.",
       "fontSize": "100%",
       "format": "short",
@@ -295,7 +278,7 @@
     },
     {
       "collapsed": false,
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -316,7 +299,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Shows the total number of critical updates that are waiting to be deployed (or are in progress).",
       "format": "none",
       "gauge": {
@@ -408,7 +391,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "",
       "format": "none",
       "gauge": {
@@ -500,7 +483,7 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "Shows the number of devices with pending updates (scope of the required updates)",
       "format": "none",
       "gauge": {
@@ -585,7 +568,7 @@
     {
       "cacheTimeout": null,
       "columns": [],
-      "datasource": "${DS_FILEWAVE_PROMETHEUS}",
+      "datasource": "FileWave Prometheus",
       "description": "",
       "fontSize": "100%",
       "gridPos": {

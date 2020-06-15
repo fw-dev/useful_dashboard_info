@@ -1,5 +1,4 @@
 env/**
-__pycache__/**
 .DS_Store
 backfill_from_existing.txt
 filewave-backfill/data
@@ -12,3 +11,6 @@ filewave-backfill/backfill_done
 build/**
 dist/**
 filewave_extra_metrics.egg-info/**
+.eggs/**
+**/__pycache__/**
+*.pyc
