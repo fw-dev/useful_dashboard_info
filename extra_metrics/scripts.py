@@ -1,12 +1,21 @@
 from extra_metrics.main import serve_and_process
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
-from extra_metrics.logs import logger, init_logging
+from extra_metrics.logs import logger
 
 import json
 import os
 import click
 import shutil
 import pkg_resources
+import subprocess
+import re
+import sys
+
+class ValidationExceptionCannotParseFileWaveVersion(Exception):
+    pass
+
+class ValidationExceptionWrongFileWaveVersion(Exception):
+    pass
 
 @click.group()
 def cli():
@@ -33,19 +42,37 @@ def install_into_environment(config_path, api_key, external_dns_name, validate):
             logger.error(f"The configuration file cannot be written to {config_path} - does this user have access?")
             return
 
-    read_config_helper(cfg)
+    try:
+        read_config_helper(cfg)
+    except FileNotFoundError:
+        if api_key is None or external_dns_name is None:
+            logger.error("When there is no configuration file you must specify an API key and external DNS name, which will then be stored in the config file")
+            return
+
+    assert cfg.section is not None
 
     if api_key is not None:
         cfg.set_fw_api_key(api_key)
     if external_dns_name is not None:
         cfg.set_fw_api_server(external_dns_name)
 
-    with open(config_path, 'w+') as f:
-        cfg.write_configuration(f)
-        logger.info(f"saved configuration to file: {config_path}")
+    try:
+        with open(config_path, 'w+') as f:
+            cfg.write_configuration(f)
+            logger.info(f"saved configuration to file: {config_path}")
+    except Exception as e:
+        logger.error("Unable to write the configuration file - normally this command requires sudo/root privs, did you use sudo?")
+        logger.error(e)
+        return
 
-    provision_dashboards_into_grafana(cfg.get_fw_api_server())
-    provision_prometheus_scrape_configuration()
+    try:    
+        provision_dashboards_into_grafana(cfg.get_fw_api_server())
+        provision_prometheus_scrape_configuration()
+        provision_supervisord_runtime()
+    except Exception as e:
+        logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
+        logger.error(e)
+        return
 
     logger.info("")
     logger.info("Configuration Summary")
@@ -54,6 +81,15 @@ def install_into_environment(config_path, api_key, external_dns_name, validate):
     logger.info(f"External DNS: {cfg.get_fw_api_server()}")
 
     validate_runtime_requirements(cfg)
+
+
+def provision_supervisord_runtime():
+    supervisord_dir = os.path.join("/usr/local/etc/filewave/supervisor/", "extras")
+    os.mkdir(supervisord_dir)
+    data = pkg_resources.resource_string("extra_metrics.cfg", "extra_metrics_supervisord.ini")
+    provisioning_file = os.path.join(supervisord_dir, 'extra_metrics_supervisord.ini')
+    with open(provisioning_file, "wb") as f:
+        f.write(data)
 
 
 def provision_dashboards_into_grafana(fw_server_dns_name):
@@ -90,7 +126,33 @@ def provision_prometheus_scrape_configuration():
             shutil.chown(provisioning_file, user="apache", group="apache")
 
 
+def get_current_fw_version():
+    proc = subprocess.Popen(["/usr/local/bin/fwcontrol", "server", "version"], stdout=subprocess.PIPE)
+    return proc.communicate()[0]
+
+
+def validate_current_fw_version():
+    current_ver = get_current_fw_version()
+    exp = re.compile(r'fwxserver (\d+).(\d+).(\d+)', re.IGNORECASE)
+    match_result = re.search(exp, current_ver)
+
+    major, minor, patch = 0, 0, 0
+    if match_result is not None:
+        major = int(match_result.group(1))
+        minor = int(match_result.group(2))
+        patch = int(match_result.group(3))
+        logger.info(f"detected FileWave instance running version: {major}.{minor}.{patch}")
+    else:
+        raise ValidationExceptionCannotParseFileWaveVersion("Failed to detection which version of FileWave is running")
+    
+    if major < 14:
+        err = f"You must be running FileWave version 14 or above - I detected a FileWave server version: {major}.{minor}.{patch}"
+        logger.error(err)
+        raise ValidationExceptionWrongFileWaveVersion(err)
+
+
 def validate_runtime_requirements(cfg):
     # TODO: does the API key have the appropriate rights? 
     # TODO: can I upgrade the grafana pie chart automatically? 
-    pass
+    validate_current_fw_version()
+    

@@ -14,3 +14,6 @@ filewave_extra_metrics.egg-info/**
 .eggs/**
 **/__pycache__/**
 *.pyc
+htmlcov/**
+.coverage
+pypi.config

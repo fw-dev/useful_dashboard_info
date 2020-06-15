@@ -6,21 +6,19 @@ import os
 import io
 import pandas as pd
 import unittest
+import unittest.mock as mock
 
 from prometheus_client import REGISTRY
 
 from extra_metrics.application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
 from extra_metrics.compliance import ClientCompliance
-from extra_metrics.logs import init_logging
 from extra_metrics.config import ExtraMetricsConfiguration
 from .test_queries import *
 
+from extra_metrics.scripts import get_current_fw_version, validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion, ValidationExceptionWrongFileWaveVersion
+
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
-
-# pointless, but who can blame me for wanting to get 100% coverage on my codebase? (and this found a bug!)
-init_logging()
-
 
 class FakeRequest:
     def __init__(self, string_data):
@@ -459,10 +457,37 @@ class TestConfiguration(unittest.TestCase):
 
     def test_configuration_changes_are_written(self):
         self.cfg.set_fw_api_key('hello world')
+        self.cfg.set_polling_delay_seconds(42)
         buf = io.StringIO()
         self.cfg.write_configuration(buf)
         value = buf.getvalue()
         self.assertTrue("hello world" in value)
+        self.assertTrue("42" in value)
+        self.assertEqual(self.cfg.get_polling_delay_seconds(), "42")
+
+def get_unparsable_version():
+    return "13.3.3"
+
+def get_incorrect_version():
+    return "fwxserver 13.3.3"
+
+def get_correct_version():
+    return "fwxserver 14.0.0"
+
+class TestRuntimeChecks(unittest.TestCase):
+    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_unparsable_version)
+    def test_validation_fails_due_to_bad_parsing(self):
+        with self.assertRaises(ValidationExceptionCannotParseFileWaveVersion):
+            validate_current_fw_version()
+
+    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_correct_version)
+    def test_validation_succeeds(self):
+        validate_current_fw_version()
+
+    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_incorrect_version)
+    def test_validation_finds_incorrect_version(self):
+        with self.assertRaises(ValidationExceptionWrongFileWaveVersion):
+            validate_current_fw_version()
 
 
 if __name__ == "__main__":

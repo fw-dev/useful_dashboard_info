@@ -3,16 +3,10 @@ import os
 from extra_metrics.logs import logger
 
 def read_config_helper(cfg):
-    try:
-        logger.info(f"loading the configuration from file {ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION}")
-        with open(ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, 'r') as f:
-            cfg.read_configuration(f)
-            return True
-    except Exception:
-        logger.info(f"trying the .extra_metrics.ini file in {os.getcwd()}")
-        with open(os.path.join(os.getcwd(), ".extra_metrics.ini"), 'r') as f:
-            cfg.read_configuration(f)
-            return True
+    logger.info(f"loading the configuration from file {ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION}")
+    with open(ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, 'r') as f:
+        cfg.read_configuration(f)
+        return True
     return False
 
 class ExtraMetricsConfiguration:
@@ -23,6 +17,8 @@ class ExtraMetricsConfiguration:
 
     def __init__(self):
         self.config = configparser.ConfigParser()
+        self.config.add_section('extra_metrics')
+        self.section = self.config['extra_metrics']
                 
     def read_configuration(self, file_obj):
         self.config.read_file(file_obj)
@@ -51,4 +47,4 @@ class ExtraMetricsConfiguration:
         # default is 5 mins
         return self._get_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, 30)
     def set_polling_delay_seconds(self, value):
-        self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, value)
+        self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, str(value))
