@@ -47,7 +47,7 @@ Extra Metrics should be configured with an Inventory API Key in order to access 
 Once you have the API key; use the following command: 
 
     $ which extra-metrics-config
-    $ sudo extra-metrics/bin/extra-metrics-config --api-key 'EzblNWflNTYwLtQzZWEtNDMwYc1iNTa1LTlmZTkxODFjODAyNH0=' --external-dns-name 'fwserver.mydomain.com'
+    $ sudo <full path extra-metrics-config>/extra-metrics-config --api-key 'EzblNWflNTYwLtQzZWEtNDMwYc1iNTa1LTlmZTkxODFjODAyNH0=' --external-dns-name 'fwserver.mydomain.com'
 
 You will see output similar to the following, confirming that the dashboards have been imported, YAML files written and that you are ready to go!
 

@@ -85,11 +85,23 @@ def install_into_environment(config_path, api_key, external_dns_name, validate):
 
 def provision_supervisord_runtime():
     supervisord_dir = os.path.join("/usr/local/etc/filewave/supervisor/", "extras")
-    os.mkdir(supervisord_dir)
-    data = pkg_resources.resource_string("extra_metrics.cfg", "extra_metrics_supervisord.ini")
-    provisioning_file = os.path.join(supervisord_dir, 'extra_metrics_supervisord.ini')
-    with open(provisioning_file, "wb") as f:
-        f.write(data)
+    if not os.path.exists(supervisord_dir):
+        os.makedirs(supervisord_dir)
+
+    # lets go hunting, I want to find executable 'extra_metrics_run' - which is installed by setuptool,
+    # but I don't know where the whole thing is being run from... so I'm looking for bin/extra_metrics_run 
+    # starting with the sys.executable directory
+    exec_path = os.path.dirname(sys.executable)
+    full_extra_metrics_run_path = "extra-metrics-run"
+    for f in os.listdir(exec_path):
+        if f == "extra-metrics-run":
+            full_extra_metrics_run_path = os.path.join(exec_path, full_extra_metrics_run_path)
+
+    data = pkg_resources.resource_string("extra_metrics.cfg", "extra_metrics_supervisord.conf").decode('utf-8')
+    provisioning_file = os.path.join(supervisord_dir, 'extra_metrics_supervisord.conf')
+    with open(provisioning_file, "w+") as f:
+        new_data = data.replace(r'${EXTRA_METRICS_RUN}', full_extra_metrics_run_path)
+        f.write(new_data)
 
 
 def provision_dashboards_into_grafana(fw_server_dns_name):
@@ -128,7 +140,7 @@ def provision_prometheus_scrape_configuration():
 
 def get_current_fw_version():
     proc = subprocess.Popen(["/usr/local/bin/fwcontrol", "server", "version"], stdout=subprocess.PIPE)
-    return proc.communicate()[0]
+    return proc.communicate()[0].lower().decode('utf-8')
 
 
 def validate_current_fw_version():

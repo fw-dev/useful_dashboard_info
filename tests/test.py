@@ -15,7 +15,8 @@ from extra_metrics.compliance import ClientCompliance
 from extra_metrics.config import ExtraMetricsConfiguration
 from .test_queries import *
 
-from extra_metrics.scripts import get_current_fw_version, validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion, ValidationExceptionWrongFileWaveVersion
+from extra_metrics.scripts import get_current_fw_version, provision_supervisord_runtime, \
+    validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion, ValidationExceptionWrongFileWaveVersion
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
@@ -489,6 +490,8 @@ class TestRuntimeChecks(unittest.TestCase):
         with self.assertRaises(ValidationExceptionWrongFileWaveVersion):
             validate_current_fw_version()
 
+    def test_can_run_supervisord_provisioning(self):
+        provision_supervisord_runtime()
 
 if __name__ == "__main__":
     unittest.main()
