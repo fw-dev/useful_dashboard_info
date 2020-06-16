@@ -19,9 +19,6 @@ from extra_metrics.logs import logger, init_logging
 
 init_logging()
 
-# TODO: changing the time is a pain in the butt, doesn't carry to new dashboards
-# TODO: add annotations in for model update to the dashboards
-
 # TODO: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
 
 # TODO: can I subscribe to FW query updates to run the app queries again?  or just the single app query?
