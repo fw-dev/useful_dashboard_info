@@ -64,8 +64,8 @@ You will see output similar to the following, confirming that the dashboards hav
 [extra-metrics] [INFO]
 [extra-metrics] [INFO] Configuration Summary
 [extra-metrics] [INFO] =====================
-[extra-metrics] [INFO] API Key: ezBlNWFlNTYwLTQzZWEtNDMwYS1iNTA0LTlmZTkxODFjODAxNH0=
-[extra-metrics] [INFO] External DNS: fwsrv.cluster8.tech
+[extra-metrics] [INFO] API Key: eZBlNWFlNTYwLTqZZWEtNDMwYS1iNTa0LTlmZTkxODFjOdaxNH6=
+[extra-metrics] [INFO] External DNS: srv.cluster.tech
 [extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
 ```
 
