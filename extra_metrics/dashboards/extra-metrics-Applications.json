@@ -56,7 +56,7 @@
       "dashes": false,
       "datasource": "FileWave Prometheus",
       "decimals": 0,
-      "description": "",
+      "description": "Show further information about application ${query_name}.",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -79,36 +79,32 @@
       },
       "lines": false,
       "linewidth": 1,
-      "links": [
-        {
-          "title": "Show devices with application: ${app_name}",
-          "url": "https://${server}/reports/${__field.labels.query_id}/info"
-        }
-      ],
+      "links": [],
       "maxPerRow": 3,
       "nullPointMode": "null",
       "options": {
-        "dataLinks": [
-          {
-            "targetBlank": true,
-            "title": "Show devices with version: ${__field.labels.application_version} of ${__field.labels.application_name}",
-            "url": "https://${server}/reports/${__field.labels.query_id}/details"
-          }
-        ]
+        "dataLinks": []
       },
       "percentage": false,
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "app_name",
+      "repeat": "query_name",
       "repeatDirection": "h",
+      "scopedVars": {
+        "query_name": {
+          "selected": false,
+          "text": "Adobe Acrobat Reader Win",
+          "value": "Adobe Acrobat Reader Win"
+        }
+      },
       "seriesOverrides": [],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
       "targets": [
         {
-          "expr": "extra_metrics_application_version{application_name=\"${app_name}\"}",
+          "expr": "extra_metrics_application_version{query_name=\"${query_name}\"}",
           "instant": true,
           "legendFormat": "{{application_version}}",
           "refId": "A"
@@ -118,7 +114,431 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "$app_name",
+      "title": "${query_name}",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Count",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "FileWave Prometheus",
+      "decimals": 0,
+      "description": "Show further information about application ${query_name}.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 3,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": true,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 3,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1592317525857,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "query_name": {
+          "selected": false,
+          "text": "Firefox Windows",
+          "value": "Firefox Windows"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "extra_metrics_application_version{query_name=\"${query_name}\"}",
+          "instant": true,
+          "legendFormat": "{{application_version}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "${query_name}",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Count",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "FileWave Prometheus",
+      "decimals": 0,
+      "description": "Show further information about application ${query_name}.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": true,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 3,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1592317525857,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "query_name": {
+          "selected": false,
+          "text": "Google Chrome Win",
+          "value": "Google Chrome Win"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "extra_metrics_application_version{query_name=\"${query_name}\"}",
+          "instant": true,
+          "legendFormat": "{{application_version}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "${query_name}",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Count",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "FileWave Prometheus",
+      "decimals": 0,
+      "description": "Show further information about application ${query_name}.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "hiddenSeries": false,
+      "id": 5,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": true,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 3,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1592317525857,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "query_name": {
+          "selected": false,
+          "text": "VLC Windows",
+          "value": "VLC Windows"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "extra_metrics_application_version{query_name=\"${query_name}\"}",
+          "instant": true,
+          "legendFormat": "{{application_version}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "${query_name}",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "Count",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "FileWave Prometheus",
+      "decimals": 0,
+      "description": "Show further information about application ${query_name}.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "hiddenSeries": false,
+      "id": 6,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": false,
+        "total": true,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 3,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1592317525857,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "query_name": {
+          "selected": false,
+          "text": "Zoom Win",
+          "value": "Zoom Win"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "extra_metrics_application_version{query_name=\"${query_name}\"}",
+          "instant": true,
+          "legendFormat": "{{application_version}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "${query_name}",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -168,21 +588,26 @@
     "list": [
       {
         "allValue": null,
-        "current": {},
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
         "datasource": "FileWave Prometheus",
         "definition": "extra_metrics_application_version",
         "hide": 0,
         "includeAll": true,
         "label": "App Name",
         "multi": true,
-        "name": "app_name",
+        "name": "query_name",
         "options": [],
         "query": "extra_metrics_application_version",
         "refresh": 2,
-        "regex": "/.*application_name=\"(.*)\",application_version=(.*).*/",
+        "regex": "/.*query_name=\"(.+)\".*/",
         "skipUrlSync": false,
         "sort": 0,
-        "tagValuesQuery": "/.*query_id=\"(.*).*/",
+        "tagValuesQuery": "/.*query_name=\"(.*)\",.*/",
         "tags": [],
         "tagsQuery": "extra_metrics_application_version",
         "type": "query",
@@ -209,10 +634,6 @@
       }
     ]
   },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
   "timepicker": {
     "refresh_intervals": [
       "5s",
@@ -228,6 +649,5 @@
     ]
   },
   "timezone": "",
-  "title": "Applications",
-  "version": 5
+  "title": "Applications"
 }

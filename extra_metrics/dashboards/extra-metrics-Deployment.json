@@ -725,10 +725,6 @@
       }
     ]
   },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
   "timepicker": {
     "refresh_intervals": [
       "5s",
@@ -744,6 +740,6 @@
     ]
   },
   "timezone": "",
-  "title": "Deployment",
-  "version": 74
+  "title": "Deployment"
 }
+ 

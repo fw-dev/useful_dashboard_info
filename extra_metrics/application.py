@@ -11,7 +11,7 @@ from .logs import logger
 
 app_version_count = Gauge('extra_metrics_application_version',
     'a summary of how many devices are using a particular app & version',
-    ["application_name", "application_version", "query_id"])
+    ["query_name", "application_version", "query_id"])
 
 
 """
@@ -119,10 +119,9 @@ class ApplicationQueryManager:
                 label_name = f"app_query_{q['name']}"
                 with http_request_time_taken.labels(label_name).time():
                     r.exec(self.fw_query)
-                
-                # and of course, throw this into the metric we are exposing.
+                             
                 for result in r.results():
-                    name = result[0]
+                    name = q['name']
                     version = result[1]
                     total = int(result[2])
                     logger.info(f"app query result for {name}, {version}, query_id: {r.query_id} = {total}")

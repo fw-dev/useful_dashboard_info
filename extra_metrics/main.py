@@ -19,7 +19,14 @@ from extra_metrics.logs import logger, init_logging
 
 init_logging()
 
-# TODO Reloading supervisord - not documented 
+# TODO: the app titles should be based on the query
+
+# TODO: why does Mozilla show nothing - reg-exp ?
+
+# TODO: update docs on upgrade for pie chart
+
+# TODO: changing the time is a pain in the butt, doesn't carry to new dashboards
+# TODO: add annotations in for model update to the dashboards
 
 # TODO: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
 
@@ -31,7 +38,7 @@ init_logging()
 
 # TODO: consider alerts for devices entering a non-healthy state for the first time today
 
-# TODO: consider how I might achieve a canibalization test for devices? 
+# TODO: consider how I might achieve a cannibalization test for devices? 
 
 # TODO: write documentation on arch and reasoning... perhaps using the Wiki in GitHub.
 
