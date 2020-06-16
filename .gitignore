@@ -17,3 +17,5 @@ filewave_extra_metrics.egg-info/**
 htmlcov/**
 .coverage
 pypi.config
+.idea/**
+venv/**
