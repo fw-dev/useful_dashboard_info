@@ -40,11 +40,15 @@ class SoftwarePatchStatus:
         return self.state_by_device.get(client_id, None)
 
     def collect_patch_data_status(self):
-        r = self.fw_query.get_software_updates_web_ui()
-        j = r.json()
+        self.state_by_patch = {}
 
-        assert j["next"] is None
-        r = j["results"]
+        j = self.fw_query.get_software_updates_web_ui_j()
+        if j is None:
+            return
+
+        if not "results" in j or len(j["results"]) == 0:
+            logger.info("no results for software update patch status received from FileWave server")
+            return None
 
         columns = [
             "update_name",
@@ -61,13 +65,20 @@ class SoftwarePatchStatus:
         values = [
         ]
 
-        self.state_by_patch = {}
+        res = j["results"]
+        for item in res:
+            update_id = item['update_id']
+            self.state_by_patch[update_id] = item
 
-        for item in r:
-            self.state_by_patch[item['update_id']] = item
             acc = item["assigned_clients_count"]
+
+            item_name = item["name"]
+            update_name = item_name["display_value"]
+            if item_name["os_type"] == "OSX":
+                update_name += f" ({update_id})"
+
             values.append([
-                item["name"]["display_value"], 
+                update_name, 
                 item["id"],
                 item["platform"], 
                 item["count_unassigned"], 
@@ -101,16 +112,21 @@ class SoftwarePatchStatus:
         software_updates_by_state.labels('Error').set(totals["error"])
         
     def collect_patch_data_per_device(self):
-        r = self.fw_query.get_software_patches()
-        j = r.json()
+        self.state_by_device = {}
+
+        j = self.fw_query.get_software_patches_j()
+        if j is None:
+            return
+
+        if not "results" in j or len(j["results"]) == 0:
+            logger.info("no results for software update patch status per device received from FileWave server")
+            return None
 
         df = pd.DataFrame(j["values"], columns=j["fields"])
         platform_mapping = {
             "0": "Apple",
             "1": "Microsoft"
         }
-
-        self.state_by_device = {}
 
         ru = df.groupby(["Client_filewave_client_name", "Client_filewave_id", "Update_critical"], as_index=False)["Update_name"].count()
         for i in ru.to_numpy():

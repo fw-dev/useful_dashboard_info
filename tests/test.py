@@ -12,6 +12,7 @@ from prometheus_client import REGISTRY
 
 from extra_metrics.application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
 from extra_metrics.compliance import ClientCompliance
+from extra_metrics.softwarepatches import SoftwarePatchStatus
 from extra_metrics.config import ExtraMetricsConfiguration
 from .test_queries import *
 
@@ -42,6 +43,14 @@ class FakeQueryInteface:
     def create_inventory_query(self, json_obj):
         if self.create_inventory_callback:  # pragma: no branch
             self.create_inventory_callback(json_obj)
+
+    def get_software_updates_web_ui_j(self):
+        t = '''{
+            "results": [
+                
+            ]
+        }'''
+        return json.loads(t)
 
     def ensure_inventory_query_group_exists(self, name_of_query):
         assert name_of_query is not None
@@ -492,6 +501,13 @@ class TestRuntimeChecks(unittest.TestCase):
 
     def test_can_run_supervisord_provisioning(self):
         provision_supervisord_runtime()
+
+
+class TestSoftwarePatchFetching(unittest.TestCase):
+    def test_that_zero_data_doesnt_cause_bad_things(self):
+        mgr = SoftwarePatchStatus(fw_query)
+        mgr.collect_patch_data_status()
+
 
 if __name__ == "__main__":
     unittest.main()

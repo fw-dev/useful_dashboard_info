@@ -17,6 +17,7 @@ Minimum FileWave system requirements:
 2. SSH: You will need SSH access to your FileWave Server.
 3. Create an API Key specifically for this module (with inventory *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
 4. Make sure your server has SSL certificates - self signed certs are not enough. 
+5. You must have an externally reachable DNS name.
 
 # Installation
 These instructions assume you will be installing Extra Metrics directly on your FileWave Server, which already has Python3.7 (or later) installed.
@@ -77,6 +78,9 @@ If this is the first time you have installed the Extra Metrics module; you will 
     $ /usr/local/filewave/python/bin/supervisorctl update
 
 ## Validating
+
+> Note: it can take a few seconds (60 or so) for the metrics to be collected by prometheus and made available.  
+
 When you view the list of dashboards available in Grafana, you'll see 3 new ones - each with a 'patching' tag, as shown below: 
 
 ![New dashboards and panels injected into an installation](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/new-dashboards.png)

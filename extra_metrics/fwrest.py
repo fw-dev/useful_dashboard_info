@@ -1,6 +1,6 @@
 import requests
 from prometheus_client import Histogram
-from .logs import logging
+from .logs import logger
 from .queries import query_client_info, query_software_patches, query_client_info
 import json
 
@@ -36,25 +36,39 @@ class FWRestQuery:
     def _auth_headers(self):
         return {'Authorization': self.api_key, 'Content-Type': 'application/json'}
 
+    def _check_status(self, r, method_name):
+        if r.status_code != 200:
+            logger.warn(f"{method_name}, status: {r.status_code}, {r}")
+            if r.status_code == 401: # rejected; just abort
+                raise Exception("401 not allowed - implies the API Key has been revoked; aborting")
+
     def get_definition_for_query_id_j(self, query_id):
         r = requests.get(self._fw_run_inv_query(f'query/{query_id}'),
                              headers=self._auth_headers())
+        self._check_status(r, 'get_definition_for_query_id_j')
         if r.status_code == 200:
-            return json.loads(r.content)
+            return r.json()
+
         return None
 
     def get_results_for_query_id(self, query_id):
-        return requests.get(self._fw_run_inv_query(f'query_result/{query_id}'),
+        r = requests.get(self._fw_run_inv_query(f'query_result/{query_id}'),
                              headers=self._auth_headers())
+        self._check_status(r, 'get_results_for_query_id')                             
+        return r
 
     def find_group_with_name(self, group_name):
         # get the group, is it there?
         r = requests.get(self._fw_run_web_query(
             'reports/groups_tree'), headers=self._auth_headers())
+
+        self._check_status(r, 'find_group_with_name')
+
         if r.status_code == 200:
             for item in r.json()["groups_hierarchy"]:
                 if item["name"] == group_name:
                     return item
+        
         return None
 
     def ensure_inventory_query_group_exists(self, group_name):
@@ -63,7 +77,6 @@ class FWRestQuery:
             return existing_group, False
 
         group_create_data = json.dumps({"name": group_name})
-        (f"data payload is: {group_create_data}")
         requests.post(self._fw_run_web_query('reports/groups/'),
                         headers=self._auth_headers(),
                         data=group_create_data)
@@ -73,8 +86,11 @@ class FWRestQuery:
     def get_all_inventory_queries(self):
         r = requests.get(self._fw_run_inv_query('query/'),
             headers=self._auth_headers())
+
+        self._check_status(r, 'get_all_inventory_queries')
         if r.status_code == 200:
             return json.loads(r.content)
+
         return None
 
     def create_inventory_query(self, json_str):
@@ -90,12 +106,24 @@ class FWRestQuery:
                              data=query_client_info)
 
     @http_request_time_taken_get_software_patches.time()
-    def get_software_patches(self):
-        return requests.post(self._fw_run_inv_query('query_result/'),
+    def get_software_patches_j(self):
+        r = requests.post(self._fw_run_inv_query('query_result/'),
                              headers=self._auth_headers(),
                              data=query_software_patches)
 
+        self._check_status(r, 'get_software_patches_j')
+        if r.status_code == 200:
+            return r.json()
+
+        return None
+
     @http_request_time_taken_get_software_updates_web.time()
-    def get_software_updates_web_ui(self):
-        return requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
+    def get_software_updates_web_ui_j(self):
+        r = requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
                             headers=self._auth_headers())
+        
+        self._check_status(r, 'get_software_updates_web_ui_j')                            
+        if r.status_code == 200:
+            return r.json()
+        
+        return None
