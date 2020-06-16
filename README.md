@@ -77,9 +77,7 @@ If this is the first time you have installed the Extra Metrics module; you will 
 ## Validating
 When you view the list of dashboards available in Grafana, you'll see 3 new ones - each with a 'patching' tag, as shown below: 
 
-![New dashboards and panels injected into an installation](images/new-dashboards.png)
-
-
+![New dashboards and panels injected into an installation](https://github.com/johncclayton/useful_dashboard_info/blob/master/images/new-dashboards.png)
 
 ## Upgrading
 To upgrade the Extra Metrics module; just run the install command again but include an '--upgrade' flag.  It is recommended to run the "config" portion of the setup
