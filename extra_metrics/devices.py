@@ -2,15 +2,20 @@ from prometheus_client import Gauge
 import pandas as pd
 import datetime
 from extra_metrics.compliance import ClientCompliance
+from extra_metrics.softwarepatches import PerDevicePatchState
 from extra_metrics.logs import logger
 
 device_checkin_days = Gauge('extra_metrics_devices_by_checkin_days',
                             'various interesting stats on a per device basis, days since checked, compliance status',
                             ["days", ])
 
+device_client_modelnumber = Gauge('extra_metrics_per_device_modelnum',
+                           'per device provides a value of the model number',
+                           ["device_name"])
+
 device_client_compliance = Gauge('extra_metrics_per_device_compliance',
-                           'provides compliance summary on a per device basis, the value here is the device model number',
-                           ["device_name", "compliant"])
+                           'per device provides a value of the compliance state',
+                           ["compliance"])
 
 device_client_version = Gauge('extra_metrics_per_device_client_version',
                            'number of devices rolled up by client version',
@@ -42,9 +47,10 @@ class PerDeviceStatus:
         metric.labels(label_value).set(total_count)
         return (label_value, total_count)
 
-    def collect_client_data(self):
+    def collect_client_data(self, soft_patches):
         Client_device_name = 0
         Client_free_disk_space = 2
+        Client_filewave_id = 10
         Client_last_check_in = 17
         DesktopClient_filewave_model_number = 18
         Client_total_disk_space = 24
@@ -56,6 +62,7 @@ class PerDeviceStatus:
             assert j["fields"]
             assert j["fields"][Client_device_name] == "Client_device_name", "field 0 is expected to be the Client's name"
             assert j["fields"][Client_last_check_in] == "Client_last_check_in", "field 17 is expected to be the Client's last check in date/time"
+            assert j["fields"][Client_filewave_id] == "Client_filewave_id", "field 10 is expected to be the Client's filewave_id"
 
             buckets = [0, 0, 0, 0]
             now = datetime.datetime.now()
@@ -87,6 +94,12 @@ class PerDeviceStatus:
                 logger.info(f"device by locked: {a}, {b}")
 
             # a bit of logic here, so rollup isn't via pandas...
+            device_count_by_compliance = {
+                ClientCompliance.STATE_OK: 0,
+                ClientCompliance.STATE_ERROR: 0,
+                ClientCompliance.STATE_WARNING: 0,
+                ClientCompliance.STATE_UNKNOWN: 0,
+            }
 
             for v in j["values"]:
                 # if there is no last check in date, we want to assume it's NEVER checked in
@@ -97,18 +110,29 @@ class PerDeviceStatus:
                     delta = now - checkin_date
                     checkin_days = delta.days
 
-                comp_check = ClientCompliance(
-                    v[Client_total_disk_space],
-                    v[Client_free_disk_space],
-                    checkin_days
-                )
+                total_crit = 0
+                total_normal = 0
 
-                # TODO: when rolling this up, if we have another entry that is non-null in any of the columns
-                # and this row IS null; drop this row, e.g. nuke duplicates - this work is pending tests in a larger environment.
-                device_client_compliance.labels(
-                    v[Client_device_name],
-                    comp_check.get_compliance_state() 
-                ).set(v[DesktopClient_filewave_model_number] if v[DesktopClient_filewave_model_number] is not None else 0)
+                client_fw_id = v[Client_filewave_id]
+                if client_fw_id is not None:
+                    per_device_state = soft_patches.get_perdevicestate_for_client_id(client_fw_id)
+                    if per_device_state is not None:
+                        total_crit = per_device_state.critical_patch_count
+                        total_normal = per_device_state.standard_patch_count
+
+                    device_client_modelnumber.labels(
+                        v[Client_device_name]
+                    ).set(v[DesktopClient_filewave_model_number] if v[DesktopClient_filewave_model_number] is not None else 0)
+
+                    comp_check = ClientCompliance(
+                        v[Client_total_disk_space],
+                        v[Client_free_disk_space],
+                        checkin_days,
+                        total_crit,
+                        total_normal
+                    )
+
+                    device_count_by_compliance[comp_check.get_compliance_state()] += 1
 
                 if(checkin_days <= 1):
                     buckets[0] += 1
@@ -119,7 +143,8 @@ class PerDeviceStatus:
                 else:
                     buckets[3] += 1
 
-            # TODO: languages / translation?
+            for key, value in device_count_by_compliance.items():
+                device_client_compliance.labels(ClientCompliance.get_compliance_state_str(key)).set(value)
 
             device_checkin_days.labels('Less than 1').set(buckets[0])
             device_checkin_days.labels('Less than 7').set(buckets[1])

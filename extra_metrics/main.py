@@ -19,19 +19,23 @@ from extra_metrics.logs import logger, init_logging
 
 init_logging()
 
-# TODO: inject the supervisord configuration 
+# TODO Reloading supervisord - not documented 
 
-# TODO: DEVICE HEALTH show the reasons/state of health of a device in custom fields so it can be reported on
+# TODO: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
 
-# TODO: there should be a top10 popular/requested updates table/panel. 
+# TODO: can I subscribe to FW query updates to run the app queries again?  or just the single app query?
 
-# TODO: link to devices affected in the dashboard is wrong; we can fix that!
+# TODO: if the configuration of the FW server changes, how does this product keep up? 
+
+# TODO: DEVICE HEALTH show the reasons/state of health of a device in (my app or) custom fields so it can be reported on
 
 # TODO: consider alerts for devices entering a non-healthy state for the first time today
 
 # TODO: consider how I might achieve a canibalization test for devices? 
 
 # TODO: write documentation on arch and reasoning... perhaps using the Wiki in GitHub.
+
+# TODO: languages / translation?
 
 tl = timeloop.Timeloop()
 
@@ -48,11 +52,10 @@ def validate_and_collect_data():
     app_qm.validate_query_definitions()
     app_qm.collect_application_query_results()
 
-    per_device.collect_client_data()
-
     software_patches.collect_patch_data_status()
     software_patches.collect_patch_data_per_device()
 
+    per_device.collect_client_data(software_patches)
 
 def serve_and_process():
     cfg = ExtraMetricsConfiguration()

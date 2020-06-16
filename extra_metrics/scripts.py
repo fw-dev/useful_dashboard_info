@@ -26,12 +26,8 @@ def cli():
 @click.option('-c', '--config-path', 'config_path', default=ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, help='the full path to the configuration file')
 @click.option('-a', '--api-key', 'api_key', default=None, help='the FileWave API Key with appropriate rights to create groups/queries')
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
-@click.option('-v', '--validate', 'validate', default=True, help='if config is present, validate some basic requirements by calling the FW server using the API Key')
-def install_into_environment(config_path, api_key, external_dns_name, validate):
-    cfg = ExtraMetricsConfiguration()
-    
-    # TODO: get the API key from the bearer_token_file - abort if not there.  assumes we are running localhost
-
+def install_into_environment(config_path, api_key, external_dns_name):
+    cfg = ExtraMetricsConfiguration()   
     dirname = os.path.dirname(config_path)
     if not os.path.exists(dirname):
         logger.error(f"The directory for the configuration file does not exist: {dirname}")

@@ -60,3 +60,14 @@ class ClientCompliance:
         disk = self.get_disk_compliance()
         patch = self.get_patch_compliance()
         return max(checkin, disk, patch)
+
+    @staticmethod
+    def get_compliance_state_str(state_value):
+        mappings = {
+            0: "Unknown",
+            1: "Ok",
+            2: "Warning",
+            3: "Error"
+        }
+
+        return mappings[state_value]
