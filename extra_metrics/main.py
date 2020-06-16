@@ -19,12 +19,6 @@ from extra_metrics.logs import logger, init_logging
 
 init_logging()
 
-# TODO: the app titles should be based on the query
-
-# TODO: why does Mozilla show nothing - reg-exp ?
-
-# TODO: update docs on upgrade for pie chart
-
 # TODO: changing the time is a pain in the butt, doesn't carry to new dashboards
 # TODO: add annotations in for model update to the dashboards
 

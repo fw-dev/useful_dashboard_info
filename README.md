@@ -72,6 +72,13 @@ You will see output similar to the following, confirming that the dashboards hav
 [extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
 ```
 
+## Upgrade the grafana-pie-chart plugin (for best results)
+The pie chart plugin likely needs an update.  You can upgrade it automatically using the following command:
+
+    $ grafana-cli --pluginsDir /usr/local/filewave/instrumentation_data/grafana/plugins plugins update grafana-piechart-panel
+
+Once this has been done, you will need to restart Grafana.
+
 ## Restarting Services
 If this is the first time you have installed the Extra Metrics module; you will need to tell supervisord to reload its configuration and to start the extra_metrics job.
 
@@ -87,10 +94,12 @@ When you view the list of dashboards available in Grafana, you'll see 3 new ones
 
 ## Upgrading
 To upgrade the Extra Metrics module; just run the install command again but include an '--upgrade' flag.  It is recommended to run the "config" portion of the setup
-again to make sure that any configuration & dashboard panel changes have been applied as well.  
+again to make sure that any configuration & dashboard panel changes have been applied as well and then restart services.
 
     $ pip install --upgrade filewave-extra-metrics
-    $ sudo $CONFIG_PATH --api-key $API_KEY --external-dns-name $DNS_NAME
+    $ sudo $CONFIG_PATH 
+    $ /usr/local/filewave/python/bin/supervisorctl update
+    # /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
 
 ## Hint: don't skip this - SSL Certs
 Make sure you have an SSL certificate, it must be valid, trusted by everyone (not just the server) and absolutely under no circumstances should it be self signed.  
