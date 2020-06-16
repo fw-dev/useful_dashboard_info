@@ -2,7 +2,7 @@
 The purpose of Extra Metrics is to augment a standard FileWave installation with additional metrics and dashboard capabilities. 
 
 # Overview
-Extra Metrics provides a series of dashboards and prometheus metrics related to how your fleet's deployments are progressing.  The information can be used to show "at-a-glance" insights into the software patch status, device health and user specific deployments.  In as many cases as possible the Dashboard panels are linked into the FileWave Web in some way to provide a way to "drill down" into the information. 
+Extra Metrics provides a series of dashboards and prometheus metrics related to how your fleets deployments are progressing.  The information can be used to show "at-a-glance" insights into the software patch status, device health and user specific deployments.  In as many cases as possible the Dashboard panels are linked into the FileWave Web in some way to provide a way to "drill down" into the information. 
 
 Features:
 * Example dashboards are included in this project; and will be installed automatically. 
@@ -11,23 +11,23 @@ Features:
 # Requirements
 Before you begin - it's very important to ensure that you meet the requirements for this additional module. 
 
-Minimum FileWave System Requirements: 
+Minimum FileWave system requirements: 
 1. The Extra Metrics system runs only on the Linux version of FileWave (unless you configure it manually on Mac)
 1. FileWave Version 14+: Extra Metrics requires version 14 or higher of the FileWave product.  It will fail to configure on anything less.
 2. SSH: You will need SSH access to your FileWave Server.
-3. Create an API Key specifically for this module (with inventory *create* rights).
+3. Create an API Key specifically for this module (with inventory *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
 4. Make sure your server has SSL certificates - self signed certs are not enough. 
 
 # Installation
 These instructions assume you will be installing Extra Metrics directly on your FileWave Server, which already has Python3.7 (or later) installed.
 
-> We *highly* recommend installing Extra Metrics into its own virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
+> We *highly* recommend installing Extra Metrics into its own python virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
 
 > DO NOT INSTALL EXTRA METRICS DIRECTLY INTO THE PYTHON RUNTIME ENVIRONMENT OF YOUR FILEWAVE SERVER.  
 
 > If you are unsure about the above statement - STOP - contact your FileWave SE or support.  Your FileWave Server installation can be destroyed by mis-understanding the impact of this configuration.
 
-## Steps
+## Installation Steps (requires SSH)
 Assuming you are already logged into your FileWave Server using SSH, follow along to set up the virtual environment, install the Extra Metrics package and configure it for use. 
 
 For the purpose of these instructions we are assuming a non-root user called gregor has been created.
@@ -35,16 +35,18 @@ For the purpose of these instructions we are assuming a non-root user called gre
     $ /usr/local/filewave/python/bin/pyvenv $HOME/extra-metrics
     $ source $HOME/extra-metrics/bin/activate
 
-Now your terminal prompt will change - the name of the virtual env should show up:
+Your terminal prompt changes - the name of the virtual env should show up:
 
     (extra-metrics) $ pip install filewave-extra-metrics
 
-Now the python package is installed; before completing configuration you need an API Key (and SSL certs)    
+At this stage the python package for Extra Metrics is installed but not configured; before completing configuration you need an API Key (and SSL certs)    
 
 ## Create & configure an Inventory API Key
-Extra Metrics should be configured with an Inventory API Key in order to access Inventory and create the inventory groups and queries.
+Extra Metrics should be configured with an Inventory API Key in order to access Inventory and create the inventory groups and queries.  You will need the base64 text version of this API Key, which can be obtained from the Manage Administrators -> Application tokens dialog in the FileWave Administrator console.
 
 > Please create a unique access token (API Key) for the Extra Metrics module
+
+> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo.
 
 Once you have the API key; use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes). 
 
