@@ -3,9 +3,10 @@ from prometheus_client import Gauge
 import traceback
 import pkg_resources
 import pandas as pd
-import os, json, sys
+import json
+import sys
 
-from .fwrest import FWRestQuery, http_request_time_taken
+from .fwrest import http_request_time_taken
 from .logs import logger
 
 
@@ -14,16 +15,16 @@ app_version_count = Gauge('extra_metrics_application_version',
     ["query_name", "application_version", "query_id"])
 
 
-"""
-Application Usage - Rollup
-
-The idea is to run a FW query, use Pandas to do a [multi] column rollup and count the number of instances 
-per version of the application.
-
-Once the counts have been made; they are stored and would be ready to pull out and put into a metric, that 
-isn't part of this class though.
-"""
 class ApplicationUsageRollup:
+    """
+    Application Usage - Rollup
+
+    The idea is to run a FW query, use Pandas to do a [multi] column rollup and count the number of instances
+    per version of the application.
+
+    Once the counts have been made; they are stored and would be ready to pull out and put into a metric, that
+    isn't part of this class though.
+    """
     def __init__(self, query_id, rollup_column_names, op_column_name, op="count"):
         self.query_id = query_id
         self.rollup_column_names = rollup_column_names if isinstance(rollup_column_names, list) else [rollup_column_names]
@@ -41,11 +42,12 @@ class ApplicationUsageRollup:
     def results(self):
         return self.result_df.to_numpy()
 
-"""
-Responsible for managing the refresh of queries for apps from the FW server, associating that 
-with the rolled up results (via ApplicationUsageRollup)
-"""
+
 class ApplicationQueryManager:
+    """
+    Responsible for managing the refresh of queries for apps from the FW server, associating that
+    with the rolled up results (via ApplicationUsageRollup)
+    """
     def __init__(self, fw_query):
         self.fw_query = fw_query
         self.app_queries = {}
@@ -88,9 +90,9 @@ class ApplicationQueryManager:
                 self.fw_query.create_inventory_query(json.dumps(json_data))
 
     def retrieve_all_queries_in_group(self, group_id):
-        # in all cases - read all queries in this group and find their IDs, store in-mem for redirection 
+        # in all cases - read all queries in this group and find their IDs, store in-mem for redirection
         all_queries = self.fw_query.get_all_inventory_queries()
-        
+
         self.app_queries = {}
         for q in all_queries:
             q_group = q["group"]
@@ -119,13 +121,13 @@ class ApplicationQueryManager:
                 label_name = f"app_query_{q['name']}"
                 with http_request_time_taken.labels(label_name).time():
                     r.exec(self.fw_query)
-                             
+
                 for result in r.results():
                     name = q['name']
                     version = result[1]
                     total = int(result[2])
                     logger.info(f"app query result for {name}, {version}, query_id: {r.query_id} = {total}")
-                    app_version_count.labels(name, version, r.query_id).set(total)                
+                    app_version_count.labels(name, version, r.query_id).set(total)
             except Exception as e:
                 logger.error(f"failed to do app query rollup on query id {q_id}, {e}")
                 traceback.print_exc(file=sys.stdout)

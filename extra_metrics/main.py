@@ -1,80 +1,129 @@
-from prometheus_client import start_http_server, Gauge
-
-import logging
-import timeloop
-import random
-import time
-import sys
-import os, json
-import datetime
-import threading
-import pandas as pd 
+from prometheus_client import start_http_server
+from extra_metrics.logs import logger, init_logging
+from extra_metrics.scripts import log_config_summary
+from periodic import Periodic
+import pandas as pd
+import asyncio
+import json
 
 from extra_metrics.application import ApplicationQueryManager
 from extra_metrics.softwarepatches import SoftwarePatchStatus
 from extra_metrics.devices import PerDeviceStatus
 from extra_metrics.fwrest import FWRestQuery
+from extra_metrics.fw_zmq_eventsub import ZMQConnector
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
-from extra_metrics.logs import logger, init_logging
-
-init_logging()
 
 # TODO: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
 
-# TODO: can I subscribe to FW query updates to run the app queries again?  or just the single app query?
+# DONE: can I subscribe to FW query updates to run the app queries again?  or just the single app query?
 
-# TODO: if the configuration of the FW server changes, how does this product keep up? 
+# TODO: if the configuration of the FW server changes, how does this product keep up?
+
+# TODO: mock the fwrestquery API itself, to prove that all methods produce the right reactions.
 
 # TODO: DEVICE HEALTH show the reasons/state of health of a device in (my app or) custom fields so it can be reported on
 
 # TODO: consider alerts for devices entering a non-healthy state for the first time today
 
-# TODO: consider how I might achieve a cannibalization test for devices? 
+# TODO: consider how I might achieve a cannibalization test for devices?
 
-# TODO: write documentation on arch and reasoning... perhaps using the Wiki in GitHub.
+# TODO: write documentation on arch and reasoning... perhaps using the Wiki in GitHub
 
 # TODO: languages / translation?
-
-tl = timeloop.Timeloop()
-
-app_qm = None
-software_patches = None
-per_device = None
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
 
 
-@tl.job(interval=datetime.timedelta(seconds=30))
-def validate_and_collect_data():
-    app_qm.validate_query_definitions()
-    app_qm.collect_application_query_results()
+class MainRuntime:
+    def __init__(self, logger):
+        self.cfg = None
+        self.zmq_sub = None
+        self.app_qm = None
+        self.software_patches = None
+        self.per_device = None
+        self.logger = logger
+        self.rerun_data_collection = True
 
-    software_patches.collect_patch_data_status()
-    software_patches.collect_patch_data_per_device()
+    def init_services(self):
+        self.cfg = ExtraMetricsConfiguration()
+        read_config_helper(self.cfg)
 
-    per_device.collect_client_data(software_patches)
+        self.fw_query = FWRestQuery(
+            hostname=self.cfg.get_fw_api_server(),
+            api_key=self.cfg.get_fw_api_key())
 
-def serve_and_process():
-    cfg = ExtraMetricsConfiguration()
-    read_config_helper(cfg)
+        self.app_qm = ApplicationQueryManager(self.fw_query)
+        self.software_patches = SoftwarePatchStatus(self.fw_query)
+        self.per_device = PerDeviceStatus(self.fw_query)
 
-    # TODO: can I use this?  get the hostname via curl -X GET "https://fwsrv.cluster8.tech/api/config/app"
-    fw_query = FWRestQuery(hostname=cfg.get_fw_api_server(), api_key=cfg.get_fw_api_key())
+        self.zmq_sub = ZMQConnector(self.cfg, lambda topic, payload: self.event_callback(topic, payload))
 
-    global app_qm, software_patches, per_device
+    def event_callback(self, topic, payload):
+        self.logger.info(f"event received: {topic}")
 
-    app_qm = ApplicationQueryManager(fw_query)
-    software_patches = SoftwarePatchStatus(fw_query)
-    per_device = PerDeviceStatus(fw_query)
+        interesting_topics = [
+            "/server/update_model_finished"
+        ]
 
-    # be a web server... go on...
+        debug_topics = interesting_topics + [
+            "/api/auditlog",
+            "/inventory/inventory_query_changed",
+            "/server/change_packets"
+        ]
+
+        if topic in debug_topics:
+            pretty_print_json = json.dumps(payload, indent=4)
+            logger.info(f"topic: {topic}")
+            logger.info(f"payload: {pretty_print_json}")
+
+        if topic in interesting_topics:
+            logger.info(f"topic {topic} fired; will re-queue data collection")
+            # set a flag in state indicating that the data collection should run imminently...
+            self.rerun_data_collection = True
+
+    async def validate_and_collect_data(self):
+        self.app_qm.validate_query_definitions()
+        self.app_qm.collect_application_query_results()
+
+        self.software_patches.collect_patch_data_status()
+        self.software_patches.collect_patch_data_per_device()
+
+        self.per_device.collect_client_data(self.software_patches)
+
+        self.rerun_data_collection = False
+
+
+async def create_program_and_run_it():
+    init_logging()
+
+    prog = MainRuntime(logger)
+    prog.init_services()
     start_http_server(8000)
 
-    # collect the first chunk of info from our server
-    validate_and_collect_data()
+    host = prog.cfg.get_fw_api_server()
+    poll_interval = prog.cfg.get_polling_delay_seconds()
+    logger.info(f"Extra Metrics - connecting to {host}, using poll interval of {poll_interval} sec")
 
-    # just sit here being a web server...
-    tl.start(block=True)
+    major, minor, patch = prog.fw_query.get_current_fw_version_major_minor_patch()
+    log_config_summary(prog.cfg, major, minor, patch)
+    
+    if major is None:
+        logger.error("Unable to reach FileWave server, aborting...")
+        return
+
+    p = Periodic(poll_interval, prog.validate_and_collect_data)
+    await p.start()
+
+    while(True):
+        if prog.rerun_data_collection:
+            await prog.validate_and_collect_data()
+        await asyncio.sleep(1)
 
 
+def serve_and_process():
+    asyncio.run(create_program_and_run_it())
+
+
+if __name__ == "__main__":
+    serve_and_process()

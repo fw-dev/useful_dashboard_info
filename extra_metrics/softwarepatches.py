@@ -2,20 +2,20 @@ from prometheus_client import Gauge
 import pandas as pd
 from extra_metrics.logs import logger
 
-software_updates_by_state = Gauge('extra_metrics_software_updates_by_state', 
+software_updates_by_state = Gauge('extra_metrics_software_updates_by_state',
     'buckets of all the software updates, according to the number of devices in each state',
     ["state"])
 
-software_updates_by_device = Gauge('extra_metrics_software_updates_by_device', 
-    'list of devices and the number of [critical] updates they need to have installed', 
+software_updates_by_device = Gauge('extra_metrics_software_updates_by_device',
+    'list of devices and the number of [critical] updates they need to have installed',
     ["device_name", "device_id", "is_update_critical"])
 
-software_updates_by_update = Gauge('extra_metrics_software_updates_by_update', 
-    'list of updates and the number of devices asking to have installed', 
+software_updates_by_update = Gauge('extra_metrics_software_updates_by_update',
+    'list of updates and the number of devices asking to have installed',
     ["update_name", "fw_id"])
 
-software_updates_by_platform = Gauge('extra_metrics_software_updates_by_platform', 
-    'list of platforms and the number of [critical] updates they have available', 
+software_updates_by_platform = Gauge('extra_metrics_software_updates_by_platform',
+    'list of platforms and the number of [critical] updates they have available',
     ["platform_name", "is_update_critical"])
 
 
@@ -46,7 +46,7 @@ class SoftwarePatchStatus:
         if j is None:
             return
 
-        if not "results" in j or len(j["results"]) == 0:
+        if "results" not in j or len(j["results"]) == 0:
             logger.info("no results for software update patch status received from FileWave server")
             return None
 
@@ -78,14 +78,14 @@ class SoftwarePatchStatus:
                 update_name += f" ({update_id})"
 
             values.append([
-                update_name, 
+                update_name,
                 item["id"],
-                item["platform"], 
-                item["count_unassigned"], 
-                acc["assigned"], 
-                acc["completed"], 
-                acc["remaining"], 
-                acc["warning"], 
+                item["platform"],
+                item["count_unassigned"],
+                acc["assigned"],
+                acc["completed"],
+                acc["remaining"],
+                acc["warning"],
                 acc["error"]
             ])
 
@@ -96,21 +96,21 @@ class SoftwarePatchStatus:
             software_updates_by_update.labels(item[0], item[1]).set(item[2])
 
         totals = df.sum(0, numeric_only=True)
-        
+
         # goal: number of software updates, grouped by status:
         # status values:
         # NEW: count_unassigned
         # IN PROGRESS: count_assigned
         # FAILED: assigned_clients.error + assigned_clients.warning
         # DONE: assigned_clients.remaining == 0
-        
+
         software_updates_by_state.labels('Unassigned').set(totals["unassigned"])
         software_updates_by_state.labels('Assigned').set(totals["assigned"])
         software_updates_by_state.labels('Completed').set(totals["completed"])
         software_updates_by_state.labels('Remaining').set(totals["remaining"])
         software_updates_by_state.labels('Warning').set(totals["warning"])
         software_updates_by_state.labels('Error').set(totals["error"])
-        
+
     def collect_patch_data_per_device(self):
         self.state_by_device = {}
 
@@ -118,7 +118,7 @@ class SoftwarePatchStatus:
         if j is None:
             return
 
-        if not "results" in j or len(j["results"]) == 0:
+        if "results" not in j or len(j["results"]) == 0:
             logger.info("no results for software update patch status per device received from FileWave server")
             return None
 
@@ -137,7 +137,7 @@ class SoftwarePatchStatus:
             logger.info(f"patches, device: {client_name}/{client_id}, critical: {is_crit}, number of updates: {update_count}")
             software_updates_by_device.labels(client_name, client_id, is_crit).set(update_count)
 
-            # update internal counter state.... we are tracking total number of standard/critical updates per client. 
+            # update internal counter state.... we are tracking total number of standard/critical updates per client.
             obj = self.get_perdevicestate_for_client_id(client_id)
             obj.client_name = client_name
             if is_crit:

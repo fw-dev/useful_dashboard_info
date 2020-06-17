@@ -1,13 +1,15 @@
 import io
-import sys
 import unittest
 import unittest.mock as mock
 
 from extra_metrics.config import ExtraMetricsConfiguration
+from extra_metrics.test.fake_mocks import FakeQueryInterface
 
-from extra_metrics.scripts import provision_supervisord_runtime, \
-        validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion, \
-        ValidationExceptionWrongFileWaveVersion
+from extra_metrics.scripts import (
+    provision_supervisord_runtime,
+    validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion,
+    ValidationExceptionWrongFileWaveVersion
+)
 
 
 class TestConfiguration(unittest.TestCase):
@@ -36,33 +38,35 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(self.cfg.get_polling_delay_seconds(), "42")
 
 
-def get_unparsable_version():
-    return "13.3.3"
+def get_unparsable_version(self):
+    return None, None, None
 
 
-def get_incorrect_version():
-    return "fwxserver 13.3.3"
+def get_incorrect_version(self):
+    return 13, 3, 0
 
 
-def get_correct_version():
-    return "fwxserver 14.0.0"
+def get_correct_version(self):
+    return 14, 0, 0
 
 
 class TestRuntimeChecks(unittest.TestCase):
-    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_unparsable_version)
+    def setUp(self):
+        self.fw_query = FakeQueryInterface()
+
+    @mock.patch('extra_metrics.test.fake_mocks.FakeQueryInterface.get_current_fw_version_major_minor_patch', get_unparsable_version)
     def test_validation_fails_due_to_bad_parsing(self):
         with self.assertRaises(ValidationExceptionCannotParseFileWaveVersion):
-            validate_current_fw_version()
+            validate_current_fw_version(self.fw_query)
 
-    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_correct_version)
+    @mock.patch('extra_metrics.test.fake_mocks.FakeQueryInterface.get_current_fw_version_major_minor_patch', get_correct_version)
     def test_validation_succeeds(self):
-        validate_current_fw_version()
+        validate_current_fw_version(self.fw_query)
 
-    @mock.patch('extra_metrics.scripts.get_current_fw_version', get_incorrect_version)
+    @mock.patch('extra_metrics.test.fake_mocks.FakeQueryInterface.get_current_fw_version_major_minor_patch', get_incorrect_version)
     def test_validation_finds_incorrect_version(self):
         with self.assertRaises(ValidationExceptionWrongFileWaveVersion):
-            validate_current_fw_version()
+            validate_current_fw_version(self.fw_query)
 
     def test_can_run_supervisord_provisioning(self):
         provision_supervisord_runtime()
-

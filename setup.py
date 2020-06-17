@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="filewave-extra-metrics", 
+    name="filewave-extra-metrics",
     version="1.0.26",
     author="John Clayton",
     author_email="johnc@filewave.com",
@@ -14,7 +14,7 @@ setuptools.setup(
     url="https://github.com/johncclayton/useful_dashboard_info",
     packages=setuptools.find_packages(),
     include_package_data=True,
-    entry_points = {
+    entry_points={
         'console_scripts': [
             'extra-metrics-config=extra_metrics.scripts:install_into_environment',
             'extra-metrics-run=extra_metrics.main:serve_and_process',

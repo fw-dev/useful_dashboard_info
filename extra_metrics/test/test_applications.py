@@ -3,7 +3,10 @@ from prometheus_client import REGISTRY
 
 from extra_metrics.test.fake_mocks import FakeQueryInterface
 from extra_metrics.test.test_queries import MAIN_GROUP_ID
-from extra_metrics.application import ApplicationQueryManager, ApplicationUsageRollup, app_version_count
+from extra_metrics.application import (
+    ApplicationQueryManager,
+    ApplicationUsageRollup
+)
 
 
 class ExtraMetricsTestCase(unittest.TestCase):
@@ -38,9 +41,12 @@ class ExtraMetricsTestCase(unittest.TestCase):
 
     def test_app_manager_invalid_query_cannot_validate(self):
         app_mgr = ApplicationQueryManager(self.fw_query)
-        self.assertFalse(app_mgr.is_query_valid(FakeQueryInterface.TEST_QUERY_DATA_INVALID))
-        self.assertFalse(app_mgr.is_query_valid(FakeQueryInterface.TEST_QUERY_DATA_ALMOST_VALID1))
-        self.assertFalse(app_mgr.is_query_valid(FakeQueryInterface.TEST_QUERY_DATA_ALMOST_VALID2))
+        self.assertFalse(app_mgr.is_query_valid(
+            FakeQueryInterface.TEST_QUERY_DATA_INVALID))
+        self.assertFalse(app_mgr.is_query_valid(
+            FakeQueryInterface.TEST_QUERY_DATA_ALMOST_VALID1))
+        self.assertFalse(app_mgr.is_query_valid(
+            FakeQueryInterface.TEST_QUERY_DATA_ALMOST_VALID2))
 
     def test_app_manager_doesnt_load_crap_queries(self):
         app_mgr = ApplicationQueryManager(self.fw_query)
@@ -99,5 +105,3 @@ class ExtraMetricsTestCase(unittest.TestCase):
         app_mgr.create_default_queries_in_group(MAIN_GROUP_ID)
 
         self.assertEqual(9, len(loaded_data))
-
-

@@ -1,6 +1,8 @@
 import configparser
-import os 
+import os
+from zmq.utils.z85 import decode as decode_z85
 from extra_metrics.logs import logger
+
 
 def read_config_helper(cfg):
     logger.info(f"loading the configuration from file {ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION}")
@@ -8,6 +10,7 @@ def read_config_helper(cfg):
         cfg.read_configuration(f)
         return True
     return False
+
 
 class ExtraMetricsConfiguration:
     DEFAULT_CFG_FILE_LOCATION = '/usr/local/etc/filewave/extra_metrics.ini'
@@ -19,14 +22,22 @@ class ExtraMetricsConfiguration:
         self.config = configparser.ConfigParser()
         self.config.add_section('extra_metrics')
         self.section = self.config['extra_metrics']
-                
+
     def read_configuration(self, file_obj):
         self.config.read_file(file_obj)
         self.section = self.config['extra_metrics']
 
     def write_configuration(self, file_obj):
         self.config.write(file_obj)
-    
+
+    def get_zmq_subscribe_keypair(self):
+        config_dir = os.path.dirname(ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION)
+        zmq_subscribe_keypair_file = os.path.join(config_dir, "zmq_subscribe_curve.keypair")
+        if os.path.exists(zmq_subscribe_keypair_file):
+            with open(zmq_subscribe_keypair_file, 'rb') as f:
+                return f.readline()
+        return None
+
     def _get_value(self, attr_name, default=None):
         return self.section.get(attr_name, default)
 
@@ -35,16 +46,18 @@ class ExtraMetricsConfiguration:
 
     def get_fw_api_server(self):
         return self._get_value(ExtraMetricsConfiguration.KEY_FW_SERVER_HOSTNAME)
+
     def set_fw_api_server(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_FW_SERVER_HOSTNAME, value)
 
-    def get_fw_api_key(self):    
+    def get_fw_api_key(self):
         return self._get_value(ExtraMetricsConfiguration.KEY_FW_SERVER_API_KEY)
+
     def set_fw_api_key(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_FW_SERVER_API_KEY, value)
 
-    def get_polling_delay_seconds(self):    
-        # default is 5 mins
+    def get_polling_delay_seconds(self):
         return self._get_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, 30)
+
     def set_polling_delay_seconds(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, str(value))

@@ -9,13 +9,20 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            // "args": [
+            //     "-X"
+            // ],
+            "console": "integratedTerminal",
+            "skipFiles": [
+                "inspector_async_hook.js",
+                "async_hooks.js"
+            ]
         },
         {
             "name": "Python: Run Tests",
             "type": "python",
             "request": "launch",
-            "program": "tests.test",
+            "program": "test",
             "env": {
                 "PYTHONPATH": "${workspaceFolderBasename}"
             },

@@ -1,21 +1,21 @@
-from extra_metrics.main import serve_and_process
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
-from extra_metrics.logs import logger
+from extra_metrics.fwrest import FWRestQuery
+from extra_metrics.logs import logger, init_logging
 
-import json
 import os
 import click
 import shutil
 import pkg_resources
-import subprocess
-import re
 import sys
+
 
 class ValidationExceptionCannotParseFileWaveVersion(Exception):
     pass
 
+
 class ValidationExceptionWrongFileWaveVersion(Exception):
     pass
+
 
 @click.group()
 def cli():
@@ -26,8 +26,11 @@ def cli():
 @click.option('-c', '--config-path', 'config_path', default=ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, help='the full path to the configuration file')
 @click.option('-a', '--api-key', 'api_key', default=None, help='the FileWave API Key with appropriate rights to create groups/queries')
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
-def install_into_environment(config_path, api_key, external_dns_name):
-    cfg = ExtraMetricsConfiguration()   
+@click.option('-s', '--skip-local-validation', is_flag=True, default=False, help='skips the local server validation checks, useful for running off a fw server')
+def install_into_environment(config_path, api_key, external_dns_name, skip_local_validation):
+    init_logging()
+
+    cfg = ExtraMetricsConfiguration()
     dirname = os.path.dirname(config_path)
     if not os.path.exists(dirname):
         logger.error(f"The directory for the configuration file does not exist: {dirname}")
@@ -61,22 +64,29 @@ def install_into_environment(config_path, api_key, external_dns_name):
         logger.error(e)
         return
 
-    try:    
-        provision_dashboards_into_grafana(cfg.get_fw_api_server())
-        provision_prometheus_scrape_configuration()
-        provision_supervisord_runtime()
-    except Exception as e:
-        logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
-        logger.error(e)
-        return
+    if not skip_local_validation:
+        try:
+            provision_dashboards_into_grafana(cfg.get_fw_api_server())
+            provision_prometheus_scrape_configuration()
+            provision_supervisord_runtime()
+        except Exception as e:
+            logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
+            logger.error(e)
+            return
 
+    q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
+    major, minor, patch = validate_runtime_requirements(q)
+
+    log_config_summary(cfg, major, minor, patch)
+
+
+def log_config_summary(cfg, major, minor, patch):
     logger.info("")
-    logger.info("Configuration Summary")
-    logger.info("=====================")
+    logger.info("Extra Metrics - Configuration Summary")
+    logger.info("=====================================")
     logger.info(f"API Key: {cfg.get_fw_api_key()}")
     logger.info(f"External DNS: {cfg.get_fw_api_server()}")
-
-    validate_runtime_requirements(cfg)
+    logger.info(f"FileWave Server: {major}.{minor}.{patch}")
 
 
 def provision_supervisord_runtime():
@@ -85,7 +95,7 @@ def provision_supervisord_runtime():
         os.makedirs(supervisord_dir)
 
     # lets go hunting, I want to find executable 'extra_metrics_run' - which is installed by setuptool,
-    # but I don't know where the whole thing is being run from... so I'm looking for bin/extra_metrics_run 
+    # but I don't know where the whole thing is being run from... so I'm looking for bin/extra_metrics_run
     # starting with the sys.executable directory
     exec_path = os.path.dirname(sys.executable)
     full_extra_metrics_run_path = "extra-metrics-run"
@@ -134,33 +144,25 @@ def provision_prometheus_scrape_configuration():
             shutil.chown(provisioning_file, user="apache", group="apache")
 
 
-def get_current_fw_version():
-    proc = subprocess.Popen(["/usr/local/bin/fwcontrol", "server", "version"], stdout=subprocess.PIPE)
-    return proc.communicate()[0].lower().decode('utf-8')
-
-
-def validate_current_fw_version():
-    current_ver = get_current_fw_version()
-    exp = re.compile(r'fwxserver (\d+).(\d+).(\d+)', re.IGNORECASE)
-    match_result = re.search(exp, current_ver)
-
-    major, minor, patch = 0, 0, 0
-    if match_result is not None:
-        major = int(match_result.group(1))
-        minor = int(match_result.group(2))
-        patch = int(match_result.group(3))
-        logger.info(f"detected FileWave instance running version: {major}.{minor}.{patch}")
-    else:
+def validate_current_fw_version(fw_query):
+    major, minor, patch = fw_query.get_current_fw_version_major_minor_patch()
+    if major is None:
         raise ValidationExceptionCannotParseFileWaveVersion("Failed to detection which version of FileWave is running")
-    
+
     if major < 14:
         err = f"You must be running FileWave version 14 or above - I detected a FileWave server version: {major}.{minor}.{patch}"
         logger.error(err)
         raise ValidationExceptionWrongFileWaveVersion(err)
 
+    return major, minor, patch
 
-def validate_runtime_requirements(cfg):
-    # TODO: does the API key have the appropriate rights? 
-    # TODO: can I upgrade the grafana pie chart automatically? 
-    validate_current_fw_version()
-    
+
+def validate_current_api_keys_rights(fw_query):
+    pass
+
+
+def validate_runtime_requirements(q):
+    # TODO: can I upgrade the grafana pie chart automatically?
+    validate_current_api_keys_rights(q)
+    return validate_current_fw_version(q)
+

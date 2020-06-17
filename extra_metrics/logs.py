@@ -4,6 +4,7 @@ import sys
 
 logger = logging.getLogger('extra-metrics')
 
+
 def init_logging():
     ch = logging.StreamHandler(sys.stdout)
     ch.setLevel(logging.INFO)

@@ -1,7 +1,14 @@
 import json
 import pandas as pd
-from extra_metrics.fwrest import FWRestQuery
-from extra_metrics.test.test_queries import *
+
+from extra_metrics.test.test_queries import \
+    MAIN_GROUP_ID, MAIN_GROUP_NAME, MAIN_GROUP_PARENT_ID
+
+from extra_metrics.test.test_queries import \
+    test_query_app_adobe_acrobat_reader_win, \
+    test_query_app_wrong_group_zoom_win, \
+    test_query_app_zoom_win, \
+    test_win_app_generic_should_not_load
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
@@ -25,6 +32,9 @@ class FakeQueryInterface:
         self.create_inventory_callback = create_inventory_callback
         super()
 
+    def get_current_fw_version_major_minor_patch(self):
+        raise Exception("not implemented - please mock this")
+
     def create_inventory_query(self, json_obj):
         if self.create_inventory_callback:  # pragma: no branch
             self.create_inventory_callback(json_obj)
@@ -32,7 +42,6 @@ class FakeQueryInterface:
     def get_software_updates_web_ui_j(self):
         t = '''{
             "results": [
-                
             ]
         }'''
         return json.loads(t)

@@ -1,6 +1,7 @@
 import unittest
 from extra_metrics.compliance import ClientCompliance
 
+
 class TestClientComplianceCase(unittest.TestCase):
     def test_compliance_with_no_data(self):
         c = ClientCompliance(None, None, None)
@@ -24,7 +25,7 @@ class TestClientComplianceCase(unittest.TestCase):
         self.assertEqual(c.get_patch_compliance(),
                          ClientCompliance.STATE_ERROR)
         # 0 critical packages, 1 other package
-        c = ClientCompliance(None, None, None, 0, 1)  
+        c = ClientCompliance(None, None, None, 0, 1)
         self.assertEqual(c.get_patch_compliance(),
                          ClientCompliance.STATE_WARNING)
 
@@ -70,4 +71,3 @@ class TestClientComplianceCase(unittest.TestCase):
         self.assertTrue(c2.get_checkin_compliance() > c1.get_disk_compliance())
         self.assertEqual(c2.get_compliance_state(),
                          ClientCompliance.STATE_ERROR)
-

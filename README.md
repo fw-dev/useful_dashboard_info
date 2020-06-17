@@ -73,11 +73,9 @@ You will see output similar to the following, confirming that the dashboards hav
 ```
 
 ## Upgrade the grafana-pie-chart plugin (for best results)
-The pie chart plugin likely needs an update.  You can upgrade it automatically using the following command:
+The pie chart plugin likely needs an update.  You can upgrade it to the latest version using the following command:
 
     $ grafana-cli --pluginsDir /usr/local/filewave/instrumentation_data/grafana/plugins plugins update grafana-piechart-panel
-
-Once this has been done, you will need to restart Grafana.
 
 ## Restarting Services
 If this is the first time you have installed the Extra Metrics module; you will need to tell supervisord to reload its configuration and to start the extra_metrics job.

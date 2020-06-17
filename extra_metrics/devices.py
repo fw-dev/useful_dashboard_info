@@ -2,7 +2,6 @@ from prometheus_client import Gauge
 import pandas as pd
 import datetime
 from extra_metrics.compliance import ClientCompliance
-from extra_metrics.softwarepatches import PerDevicePatchState
 from extra_metrics.logs import logger
 
 device_checkin_days = Gauge('extra_metrics_devices_by_checkin_days',
@@ -32,6 +31,7 @@ device_client_tracked = Gauge('extra_metrics_per_device_tracked',
 device_client_locked = Gauge('extra_metrics_per_device_locked',
                            'number of devices locked',
                            ["locked"])
+
 
 class PerDeviceStatus:
     def __init__(self, fw_query):
