@@ -3,7 +3,7 @@ from extra_metrics.fwrest import FWRestQuery
 from extra_metrics.config import read_config_helper, ExtraMetricsConfiguration
 
 
-class ExtraMetricsQueryTestCase(unittest.TestCase):
+class FWQueryTestCase(unittest.TestCase):
     def test_query_init(self):
         fq = FWRestQuery("a", "b")
         self.assertEqual(fq.hostname, "a")
@@ -21,4 +21,5 @@ class ExtraMetricsQueryTestCase(unittest.TestCase):
 
         fw_q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
 
-        fw_q.get_software_patches_j()
+        r = fw_q.get_software_patches_j()
+        print(r)

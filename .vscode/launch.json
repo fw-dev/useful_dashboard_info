@@ -9,14 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            // "args": [
-            //     "-X"
-            // ],
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "inspector_async_hook.js",
-                "async_hooks.js"
-            ]
+            "console": "integratedTerminal"
         },
         {
             "name": "Python: Run Tests",

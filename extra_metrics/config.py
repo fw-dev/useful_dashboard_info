@@ -57,7 +57,7 @@ class ExtraMetricsConfiguration:
         self._set_value(ExtraMetricsConfiguration.KEY_FW_SERVER_API_KEY, value)
 
     def get_polling_delay_seconds(self):
-        return self._get_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, 30)
+        return int(self._get_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, 30))
 
     def set_polling_delay_seconds(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, str(value))

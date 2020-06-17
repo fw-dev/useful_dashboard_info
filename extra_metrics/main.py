@@ -63,11 +63,11 @@ class MainRuntime:
         self.logger.info(f"event received: {topic}")
 
         interesting_topics = [
-            "/server/update_model_finished"
+            "/server/update_model_finished",
+            "/api/auditlog",
         ]
 
         debug_topics = interesting_topics + [
-            "/api/auditlog",
             "/inventory/inventory_query_changed",
             "/server/change_packets"
         ]
@@ -78,8 +78,11 @@ class MainRuntime:
             logger.info(f"payload: {pretty_print_json}")
 
         if topic in interesting_topics:
+            if topic == "/api/auditlog" and "Report Created" not in payload["message"]:
+                return
+
+            # set a flag in state indicating that the data collection should run imminently
             logger.info(f"topic {topic} fired; will re-queue data collection")
-            # set a flag in state indicating that the data collection should run imminently...
             self.rerun_data_collection = True
 
     async def validate_and_collect_data(self):
@@ -107,7 +110,7 @@ async def create_program_and_run_it():
 
     major, minor, patch = prog.fw_query.get_current_fw_version_major_minor_patch()
     log_config_summary(prog.cfg, major, minor, patch)
-    
+
     if major is None:
         logger.error("Unable to reach FileWave server, aborting...")
         return

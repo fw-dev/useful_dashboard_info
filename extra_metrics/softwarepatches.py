@@ -118,7 +118,7 @@ class SoftwarePatchStatus:
         if j is None:
             return
 
-        if "results" not in j or len(j["results"]) == 0:
+        if "values" not in j or len(j["values"]) == 0:
             logger.info("no results for software update patch status per device received from FileWave server")
             return None
 

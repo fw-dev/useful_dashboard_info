@@ -136,3 +136,12 @@ The whole fleet of devices is continuously sending data back to the FileWave Inv
 Panels provided: 
 - Device health summary - a grouping of all devices by health state.  The health of a device is calculated as follows: 
  - TBD (disk space, outstanding patches)
+
+# Changelog
+
+17-Jun-2020:
+- experimental: re-runs app queries if any new query is updated, model update is run - this paves the way for reducing the number of polling requests being made, once more events are being sent from the FW server
+- the app version dashboard now properly reflects the queries in the group 'Extra Metrics Queries - Apps', there is now one panel for each query.
+- the app version dashboard now contains a quicklinks panel; allowing users to quickly get into the web UI for each of their app queries
+- the server version check is now performed via a REST call instead of using local binaries and parsing that result
+- changed to asyncio under the hood to allow for subscriptions to FW server events and removed dependancy on TimeLoop module

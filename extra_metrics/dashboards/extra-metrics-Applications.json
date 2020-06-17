@@ -97,7 +97,7 @@
   ],
   "panels": [
     {
-      "collapsed": true,
+      "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
@@ -106,86 +106,117 @@
         "y": 0
       },
       "id": 23,
-      "panels": [
-        {
-          "columns": [],
-          "datasource": null,
-          "description": "Quickly jump to each of the reports in FileWave.",
-          "fontSize": "100%",
-          "gridPos": {
-            "h": 6,
-            "w": 12,
-            "x": 0,
-            "y": 1
-          },
-          "id": 9,
-          "options": {},
-          "pageSize": null,
-          "showHeader": true,
-          "sort": {
-            "col": 1,
-            "desc": false
-          },
-          "styles": [
-            {
-              "alias": "Time",
-              "dateFormat": "YYYY-MM-DD HH:mm:ss",
-              "pattern": "Time",
-              "type": "hidden"
-            },
-            {
-              "alias": "Query Name",
-              "colorMode": null,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "dateFormat": "YYYY-MM-DD HH:mm:ss",
-              "decimals": 2,
-              "link": true,
-              "linkTargetBlank": true,
-              "linkTooltip": "Jump to report: ${__cell_7}",
-              "linkUrl": "https://${server}/reports/${__cell_6}/info",
-              "mappingType": 1,
-              "pattern": "query_name",
-              "thresholds": [],
-              "type": "string",
-              "unit": "short"
-            },
-            {
-              "alias": "",
-              "colorMode": null,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "decimals": 2,
-              "pattern": "/.*/",
-              "thresholds": [],
-              "type": "hidden",
-              "unit": "short"
-            }
-          ],
-          "targets": [
-            {
-              "expr": "count(extra_metrics_application_version) by (query_name)",
-              "format": "table",
-              "instant": true,
-              "legendFormat": "",
-              "refId": "A"
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Reports Quick Links",
-          "transform": "table",
-          "type": "table"
-        }
-      ],
+      "panels": [],
       "title": "Report Links",
       "type": "row"
+    },
+    {
+      "columns": [],
+      "datasource": null,
+      "description": "Quickly jump to each of the reports in FileWave.",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 9,
+      "options": {},
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 1,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Time",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "Time",
+          "type": "hidden"
+        },
+        {
+          "alias": "Query Name",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "link": true,
+          "linkTargetBlank": true,
+          "linkTooltip": "Jump to report: ${__cell_2}",
+          "linkUrl": "https://${server}/reports/${__cell_1}/details",
+          "mappingType": 1,
+          "pattern": "query_name",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "query_id",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "count(extra_metrics_application_version) by (query_name, query_id)",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Reports Quick Links",
+      "transform": "table",
+      "type": "table"
     },
     {
       "collapsed": false,
@@ -194,7 +225,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 1
+        "y": 7
       },
       "id": 30,
       "panels": [],
@@ -216,7 +247,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 2
+        "y": 8
       },
       "hiddenSeries": false,
       "id": 2,
@@ -325,7 +356,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 2
+        "y": 8
       },
       "hiddenSeries": false,
       "id": 31,
@@ -356,7 +387,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1592323635844,
+      "repeatIteration": 1592413324683,
       "repeatPanelId": 2,
       "scopedVars": {
         "query_name": {
@@ -436,7 +467,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 16
       },
       "hiddenSeries": false,
       "id": 32,
@@ -467,7 +498,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1592323635844,
+      "repeatIteration": 1592413324683,
       "repeatPanelId": 2,
       "scopedVars": {
         "query_name": {
@@ -547,7 +578,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 16
       },
       "hiddenSeries": false,
       "id": 33,
@@ -578,7 +609,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1592323635844,
+      "repeatIteration": 1592413324683,
       "repeatPanelId": 2,
       "scopedVars": {
         "query_name": {
@@ -658,7 +689,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 18
+        "y": 24
       },
       "hiddenSeries": false,
       "id": 34,
@@ -689,7 +720,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1592323635844,
+      "repeatIteration": 1592413324683,
       "repeatPanelId": 2,
       "scopedVars": {
         "query_name": {
@@ -769,7 +800,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 18
+        "y": 24
       },
       "hiddenSeries": false,
       "id": 35,
@@ -800,7 +831,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1592323635844,
+      "repeatIteration": 1592413324683,
       "repeatPanelId": 2,
       "scopedVars": {
         "query_name": {
@@ -870,9 +901,7 @@
   "refresh": "30s",
   "schemaVersion": 21,
   "style": "dark",
-  "tags": [
-    "patching"
-  ],
+  "tags": [],
   "templating": {
     "list": [
       {

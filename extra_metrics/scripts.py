@@ -22,12 +22,16 @@ def cli():
     click.echo("FileWave Extra Metrics configuration.")
 
 
+delay_30m = 60 * 30
+
+
 @cli.command('validate', help="Validates the configuration assuming you are running this on the FileWave Server")
 @click.option('-c', '--config-path', 'config_path', default=ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, help='the full path to the configuration file')
 @click.option('-a', '--api-key', 'api_key', default=None, help='the FileWave API Key with appropriate rights to create groups/queries')
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
-@click.option('-s', '--skip-local-validation', is_flag=True, default=False, help='skips the local server validation checks, useful for running off a fw server')
-def install_into_environment(config_path, api_key, external_dns_name, skip_local_validation):
+@click.option('-i', '--interval', 'polling_interval', default=delay_30m, help='the seconds delay between successive queries against the FileWave system (default is 30m, 1800s)')
+@click.option('-s', '--skip-local-validation', is_flag=True, default=False, help='skips the local server validation checks, useful when this isnt running on a fw server')
+def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_local_validation):
     init_logging()
 
     cfg = ExtraMetricsConfiguration()
@@ -54,6 +58,9 @@ def install_into_environment(config_path, api_key, external_dns_name, skip_local
         cfg.set_fw_api_key(api_key)
     if external_dns_name is not None:
         cfg.set_fw_api_server(external_dns_name)
+
+    if polling_interval is not None:
+        cfg.set_polling_delay_seconds(polling_interval)
 
     try:
         with open(config_path, 'w+') as f:
@@ -84,9 +91,10 @@ def log_config_summary(cfg, major, minor, patch):
     logger.info("")
     logger.info("Extra Metrics - Configuration Summary")
     logger.info("=====================================")
-    logger.info(f"API Key: {cfg.get_fw_api_key()}")
-    logger.info(f"External DNS: {cfg.get_fw_api_server()}")
-    logger.info(f"FileWave Server: {major}.{minor}.{patch}")
+    logger.info(f"External DNS     : {cfg.get_fw_api_server()}")
+    logger.info(f"API Key          : {cfg.get_fw_api_key()}")
+    logger.info(f"FileWave Server  : {major}.{minor}.{patch}")
+    logger.info(f"Polling Interval : {cfg.get_polling_delay_seconds()} sec")
 
 
 def provision_supervisord_runtime():
