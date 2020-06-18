@@ -843,13 +843,6 @@
       },
       "id": 27,
       "interval": null,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Show Affected Devices",
-          "url": "https://${server}/reports/46/details/"
-        }
-      ],
       "mappingType": 1,
       "mappingTypes": [
         {

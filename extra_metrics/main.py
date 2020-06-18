@@ -13,13 +13,15 @@ from extra_metrics.fwrest import FWRestQuery
 from extra_metrics.fw_zmq_eventsub import ZMQConnector
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 
-# TODO: upgrade the pie chart plugin in on-box upgrade/install 
+# DONE: upgrade the pie chart plugin in on-box upgrade/install 
 
-# TODO: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
+# DONE: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
+
+# TODO: make it work on Mac too
 
 # TODO: add mtail for scraping existing postgres logs for queries to get a list of the slow ones.
 
-# TODO: I really need a way to validate the dashboard files contain the right keys, this is critical for sane deployment
+# DONE: I really need a way to validate the dashboard files contain the right keys, this is critical for sane deployment
 
 # IDEAS: if the configuration of the FW server changes, how does this product keep up?
 

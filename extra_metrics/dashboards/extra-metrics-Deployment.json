@@ -691,7 +691,7 @@
         "legendUsePointStyle": false,
         "linkEnabled": true,
         "linkTargetBlank": true,
-        "linkUrl": "https://${server}/associations/${__association_id}/${__status}",
+        "linkUrl": "https://${__hostname}/associations/${__association_id}/${__status}",
         "nullPointMode": "connected",
         "selectedHighlight": {
           "label": "COMPLETED",
