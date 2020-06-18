@@ -18,25 +18,20 @@ from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 # TODO: add mtail for scraping existing postgres logs for queries to get a list of the slow ones.
 
 # TODO: I really need a way to validate the dashboard files contain the right keys, this is critical for sane deployment
-'''
-    "refresh": "30s",
-    "style": "dark",
-    "tags": [
-        "patching"
-    ],'''
-    '''
-    "links": [
-    {
-      "asDropdown": false,
-      "icon": "external link",
-      "includeVars": false,
-      "keepTime": true,
-      "tags": [
-        "patching"
-      ],
-      "type": "dashboards"
-    }
-  ],'''
+
+# IDEAS: if the configuration of the FW server changes, how does this product keep up?
+
+# TODO: mock the fwrestquery API itself, to prove that all methods produce the right reactions.
+
+# TODO: DEVICE HEALTH show the reasons/state of health of a device in (my app or) custom fields so it can be reported on
+
+# TODO: consider alerts for devices entering a non-healthy state for the first time today
+
+# TODO: consider how I might achieve a cannibalization test for devices?
+
+# TODO: write documentation on arch and reasoning... perhaps using the Wiki in GitHub
+
+# TODO: languages / translation?
 
 pd.set_option('display.precision', 3)
 pd.set_option('display.expand_frame_repr', False)
