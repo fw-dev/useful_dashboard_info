@@ -2,11 +2,13 @@ import io
 import unittest
 import unittest.mock as mock
 
+from extra_metrics.logs import logger
 from extra_metrics.config import ExtraMetricsConfiguration
 from extra_metrics.test.fake_mocks import FakeQueryInterface
 
 from extra_metrics.scripts import (
     provision_supervisord_runtime,
+    running_on_a_fwxserver_host,
     validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion,
     ValidationExceptionWrongFileWaveVersion
 )
@@ -35,7 +37,7 @@ class TestConfiguration(unittest.TestCase):
         value = buf.getvalue()
         self.assertTrue("hello world" in value)
         self.assertTrue("42" in value)
-        self.assertEqual(self.cfg.get_polling_delay_seconds(), "42")
+        self.assertEqual(self.cfg.get_polling_delay_seconds(), 42)
 
 
 def get_unparsable_version(self):
@@ -70,3 +72,11 @@ class TestRuntimeChecks(unittest.TestCase):
 
     def test_can_run_supervisord_provisioning(self):
         provision_supervisord_runtime()
+
+    def test_running_on_fwxserver_host(self):
+        def my_check(yes_or_no, file_path):
+            logger.info("checking file path:", file_path)
+            return yes_or_no
+
+        self.assertTrue(running_on_a_fwxserver_host(exist_func=lambda f: my_check(True, f)))
+        self.assertFalse(running_on_a_fwxserver_host(exist_func=lambda f: my_check(False, f)))

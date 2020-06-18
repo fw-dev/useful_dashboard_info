@@ -25,13 +25,28 @@ def cli():
 delay_30m = 60 * 30
 
 
+def running_on_a_fwxserver_host(exist_func=os.path.exists):
+    '''
+    Check directories exist to see if we are running on a FileWave server host installation
+    This should return True if we are, regardless of being Mac/Linux/Docker etc.
+    '''
+    dirs_that_must_exist = ["bin", "certs", "django", "grafana", "log", "prometheus"]
+    main_filewave_dir = os.path.join("/usr/local/", "filewave")
+    if not exist_func(main_filewave_dir):
+        return False
+    for f in [os.path.join(main_filewave_dir, d) for d in dirs_that_must_exist]:
+        if not exist_func(f):
+            return False
+    return True
+
+
 @cli.command('validate', help="Validates the configuration assuming you are running this on the FileWave Server")
 @click.option('-c', '--config-path', 'config_path', default=ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION, help='the full path to the configuration file')
 @click.option('-a', '--api-key', 'api_key', default=None, help='the FileWave API Key with appropriate rights to create groups/queries')
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
 @click.option('-i', '--interval', 'polling_interval', default=delay_30m, help='the seconds delay between successive queries against the FileWave system (default is 30m, 1800s)')
-@click.option('-s', '--skip-local-validation', is_flag=True, default=False, help='skips the local server validation checks, useful when this isnt running on a fw server')
-def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_local_validation):
+@click.option('-s', '--skip-provisioning', is_flag=True, default=False, help='skips the local server provisioning, useful when this isnt running on a fw server')
+def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning):
     init_logging()
 
     cfg = ExtraMetricsConfiguration()
@@ -71,20 +86,28 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
         logger.error(e)
         return
 
-    if not skip_local_validation:
-        try:
-            provision_dashboards_into_grafana(cfg.get_fw_api_server())
-            provision_prometheus_scrape_configuration()
-            provision_supervisord_runtime()
-        except Exception as e:
-            logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
-            logger.error(e)
-            return
+    # I use a flag here, because I want the WARNING text to be the last thing a user sees here
+    present_warning = False
+    if not skip_provisioning:
+        if running_on_a_fwxserver_host():
+            try:
+                provision_dashboards_into_grafana(cfg.get_fw_api_server())
+                provision_prometheus_scrape_configuration()
+                provision_supervisord_runtime()
+            except Exception as e:
+                logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
+                logger.error(e)
+                return
+        else:
+            present_warning = True
 
     q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
     major, minor, patch = validate_runtime_requirements(q)
 
     log_config_summary(cfg, major, minor, patch)
+
+    if present_warning:
+        logger.warning("provisioning of metrics dashboards, setting prometheus scrape config and supervisord runtime was skipped as I didn't detect a FileWave Server installation - you can ignore this warning if you are intentionally setting this up on a different host (or in a container).  To avoid this warning entirely, run the configuration with --skip-provisioning")
 
 
 def log_config_summary(cfg, major, minor, patch):
@@ -94,7 +117,9 @@ def log_config_summary(cfg, major, minor, patch):
     logger.info(f"External DNS     : {cfg.get_fw_api_server()}")
     logger.info(f"API Key          : {cfg.get_fw_api_key()}")
     logger.info(f"FileWave Server  : {major}.{minor}.{patch}")
-    logger.info(f"Polling Interval : {cfg.get_polling_delay_seconds()} sec")
+
+    poll_sec = cfg.get_polling_delay_seconds()
+    logger.info(f"Polling Interval : {poll_sec} sec / {poll_sec / 60.0:.1f} min")
 
 
 def provision_supervisord_runtime():
@@ -159,7 +184,6 @@ def validate_current_fw_version(fw_query):
 
     if major < 14:
         err = f"You must be running FileWave version 14 or above - I detected a FileWave server version: {major}.{minor}.{patch}"
-        logger.error(err)
         raise ValidationExceptionWrongFileWaveVersion(err)
 
     return major, minor, patch

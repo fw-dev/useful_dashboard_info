@@ -22,4 +22,4 @@ class FWQueryTestCase(unittest.TestCase):
         fw_q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
 
         r = fw_q.get_software_patches_j()
-        print(r)
+        assert r is not None

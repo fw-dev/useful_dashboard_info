@@ -901,7 +901,9 @@
   "refresh": "30s",
   "schemaVersion": 21,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "patching"
+  ],
   "templating": {
     "list": [
       {
