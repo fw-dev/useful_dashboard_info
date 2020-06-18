@@ -5,8 +5,10 @@ from extra_metrics.logs import logger, init_logging
 import os
 import click
 import shutil
+import subprocess
 import pkg_resources
 import sys
+import errno
 
 
 class ValidationExceptionCannotParseFileWaveVersion(Exception):
@@ -14,6 +16,10 @@ class ValidationExceptionCannotParseFileWaveVersion(Exception):
 
 
 class ValidationExceptionWrongFileWaveVersion(Exception):
+    pass
+
+
+class NotRunningRoot(Exception):
     pass
 
 
@@ -25,13 +31,25 @@ def cli():
 delay_30m = 60 * 30
 
 
+def run_root_command(cmd_array):
+    try:
+        os.rename('/etc/foo', '/etc/bar')
+    except IOError as e:
+        if (e == errno.EPERM):
+            return False
+
+    proc = subprocess.Popen(cmd_array, stdout=subprocess.PIPE)
+    return proc.communicate()[0].decode('utf-8')
+
+
 def running_on_a_fwxserver_host(exist_func=os.path.exists):
     '''
     Check directories exist to see if we are running on a FileWave server host installation
     This should return True if we are, regardless of being Mac/Linux/Docker etc.
     '''
-    dirs_that_must_exist = ["bin", "certs", "django", "grafana", "log", "prometheus"]
-    main_filewave_dir = os.path.join("/usr/local/", "filewave")
+    dirs_that_must_exist = ["bin", "certs",
+                            "django", "grafana", "log", "prometheus"]
+    main_filewave_dir = os.path.join("/usr/local", "filewave")
     if not exist_func(main_filewave_dir):
         return False
     for f in [os.path.join(main_filewave_dir, d) for d in dirs_that_must_exist]:
@@ -52,19 +70,22 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
     cfg = ExtraMetricsConfiguration()
     dirname = os.path.dirname(config_path)
     if not os.path.exists(dirname):
-        logger.error(f"The directory for the configuration file does not exist: {dirname}")
+        logger.error(
+            f"The directory for the configuration file does not exist: {dirname}")
         return
 
     if not os.path.exists(config_path) and os.path.isfile(config_path):
         if not os.access(config_path, os.W_OK):
-            logger.error(f"The configuration file cannot be written to {config_path} - does this user have access?")
+            logger.error(
+                f"The configuration file cannot be written to {config_path} - does this user have access?")
             return
 
     try:
         read_config_helper(cfg)
     except FileNotFoundError:
         if api_key is None or external_dns_name is None:
-            logger.error("When there is no configuration file you must specify an API key and external DNS name, which will then be stored in the config file")
+            logger.error(
+                "When there is no configuration file you must specify an API key and external DNS name, which will then be stored in the config file")
             return
 
     assert cfg.section is not None
@@ -82,20 +103,35 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
             cfg.write_configuration(f)
             logger.info(f"saved configuration to file: {config_path}")
     except Exception as e:
-        logger.error("Unable to write the configuration file - normally this command requires sudo/root privs, did you use sudo?")
+        logger.error(
+            "Unable to write the configuration file - normally this command requires sudo/root privs, did you use sudo?")
         logger.error(e)
         return
 
     # I use a flag here, because I want the WARNING text to be the last thing a user sees here
     present_warning = False
+
     if not skip_provisioning:
         if running_on_a_fwxserver_host():
+            if run_root_command(["ls", "-l"]) is False:
+                logger.info(
+                    "provisioning is requested - but I've detected you are not running as root - aborting")
+                raise NotRunningRoot(
+                    "provisioning is requested - but I've detected you are not running as root - aborting")
+
             try:
                 provision_dashboards_into_grafana(cfg.get_fw_api_server())
                 provision_prometheus_scrape_configuration()
                 provision_supervisord_runtime()
+                run_root_command(["/usr/local/sbin/grafana-cli",
+                                  "--pluginsDir",
+                                  "/usr/local/filewave/instrumentation_data/grafana/plugins",
+                                  "plugins",
+                                  "update",
+                                  "grafana-piechart-panel"])
             except Exception as e:
-                logger.error("Error during provisioning of prometheus/grafana, are you using sudo?")
+                logger.error(
+                    "Error during provisioning of prometheus/grafana, are you using sudo?")
                 logger.error(e)
                 return
         else:
@@ -103,7 +139,6 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
 
     q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
     major, minor, patch = validate_runtime_requirements(q)
-
     log_config_summary(cfg, major, minor, patch)
 
     if present_warning:
@@ -119,11 +154,13 @@ def log_config_summary(cfg, major, minor, patch):
     logger.info(f"FileWave Server  : {major}.{minor}.{patch}")
 
     poll_sec = cfg.get_polling_delay_seconds()
-    logger.info(f"Polling Interval : {poll_sec} sec / {poll_sec / 60.0:.1f} min")
+    logger.info(
+        f"Polling Interval : {poll_sec} sec / {poll_sec / 60.0:.1f} min")
 
 
 def provision_supervisord_runtime():
-    supervisord_dir = os.path.join("/usr/local/etc/filewave/supervisor/", "extras")
+    supervisord_dir = os.path.join(
+        "/usr/local/etc/filewave/supervisor/", "extras")
     if not os.path.exists(supervisord_dir):
         os.makedirs(supervisord_dir)
 
@@ -134,27 +171,35 @@ def provision_supervisord_runtime():
     full_extra_metrics_run_path = "extra-metrics-run"
     for f in os.listdir(exec_path):
         if f == "extra-metrics-run":
-            full_extra_metrics_run_path = os.path.join(exec_path, full_extra_metrics_run_path)
+            full_extra_metrics_run_path = os.path.join(
+                exec_path, full_extra_metrics_run_path)
 
-    data = pkg_resources.resource_string("extra_metrics.cfg", "extra_metrics_supervisord.conf").decode('utf-8')
-    provisioning_file = os.path.join(supervisord_dir, 'extra_metrics_supervisord.conf')
+    data = pkg_resources.resource_string(
+        "extra_metrics.cfg", "extra_metrics_supervisord.conf").decode('utf-8')
+    provisioning_file = os.path.join(
+        supervisord_dir, 'extra_metrics_supervisord.conf')
     with open(provisioning_file, "w+") as f:
-        new_data = data.replace(r'${EXTRA_METRICS_RUN}', full_extra_metrics_run_path)
+        new_data = data.replace(
+            r'${EXTRA_METRICS_RUN}', full_extra_metrics_run_path)
         f.write(new_data)
 
 
 def provision_dashboards_into_grafana(fw_server_dns_name):
     # if the expected dashboards DO NOT exist in the right path, moan about this and go ahead and copy them..
-    grafana_dashboard_deployment_dir = os.path.join("/usr/local/etc/filewave/grafana/provisioning", "dashboards")
+    grafana_dashboard_deployment_dir = os.path.join(
+        "/usr/local/etc/filewave/grafana/provisioning", "dashboards")
     if not os.path.exists(grafana_dashboard_deployment_dir):
-        logger.error(f"The Grafana dashboard deployment directory ({grafana_dashboard_deployment_dir}) does not exist; is this version 14+ of FileWave?")
+        logger.error(
+            f"The Grafana dashboard deployment directory ({grafana_dashboard_deployment_dir}) does not exist; is this version 14+ of FileWave?")
         return
 
     # check each file is there... overwrite regardless (helps on upgrade I suppose)
     for dashboard_file in pkg_resources.resource_listdir("extra_metrics", "dashboards"):
         if dashboard_file.endswith(".json"):
-            data = pkg_resources.resource_string("extra_metrics.dashboards", dashboard_file).decode('utf-8')
-            provisioning_file = os.path.join(grafana_dashboard_deployment_dir, dashboard_file)
+            data = pkg_resources.resource_string(
+                "extra_metrics.dashboards", dashboard_file).decode('utf-8')
+            provisioning_file = os.path.join(
+                grafana_dashboard_deployment_dir, dashboard_file)
             with open(provisioning_file, 'w+') as f:
                 # load up the dashboard and replace the ${VAR_SERVER} with our config value of the external DNS
                 new_data = data.replace('${VAR_SERVER}', fw_server_dns_name)
@@ -163,14 +208,17 @@ def provision_dashboards_into_grafana(fw_server_dns_name):
 
 
 def provision_prometheus_scrape_configuration():
-    prometheus_dir = os.path.join("/usr/local/etc/filewave/prometheus/conf.d/jobs", "http")
+    prometheus_dir = os.path.join(
+        "/usr/local/etc/filewave/prometheus/conf.d/jobs", "http")
     if not os.path.exists(prometheus_dir):
-        logger.error(f"The Prometheus directory ({prometheus_dir}) does not exist; is this version 14+ of FileWave?")
+        logger.error(
+            f"The Prometheus directory ({prometheus_dir}) does not exist; is this version 14+ of FileWave?")
         return
 
     for yaml_file in pkg_resources.resource_listdir("extra_metrics", "cfg"):
         if yaml_file.endswith(".yml"):
-            data = pkg_resources.resource_string("extra_metrics.cfg", yaml_file)
+            data = pkg_resources.resource_string(
+                "extra_metrics.cfg", yaml_file)
             provisioning_file = os.path.join(prometheus_dir, yaml_file)
             with open(provisioning_file, 'wb') as f:
                 f.write(data)
@@ -180,7 +228,8 @@ def provision_prometheus_scrape_configuration():
 def validate_current_fw_version(fw_query):
     major, minor, patch = fw_query.get_current_fw_version_major_minor_patch()
     if major is None:
-        raise ValidationExceptionCannotParseFileWaveVersion("Failed to detection which version of FileWave is running")
+        raise ValidationExceptionCannotParseFileWaveVersion(
+            "Failed to detection which version of FileWave is running")
 
     if major < 14:
         err = f"You must be running FileWave version 14 or above - I detected a FileWave server version: {major}.{minor}.{patch}"
@@ -197,4 +246,3 @@ def validate_runtime_requirements(q):
     # TODO: can I upgrade the grafana pie chart automatically?
     validate_current_api_keys_rights(q)
     return validate_current_fw_version(q)
-

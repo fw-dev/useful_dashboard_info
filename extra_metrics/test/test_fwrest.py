@@ -15,11 +15,10 @@ class FWQueryTestCase(unittest.TestCase):
                          fq._fw_run_inv_query("def"))
         self.assertEqual("https://a/api/xyz", fq._fw_run_web_query("xyz"))
 
-    def test_live_get_software_patches_j(self):
-        cfg = ExtraMetricsConfiguration()
-        read_config_helper(cfg)
-
-        fw_q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
-
-        r = fw_q.get_software_patches_j()
-        assert r is not None
+    # @unittest.skip()
+    # def test_live_get_software_patches_j(self):
+    #     cfg = ExtraMetricsConfiguration()
+    #     read_config_helper(cfg)
+    #     fw_q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
+    #     r = fw_q.get_software_patches_j()
+    #     assert r is not None
