@@ -83,7 +83,6 @@ If this is the first time you have installed the Extra Metrics module; you will 
     $ /usr/local/filewave/python/bin/supervisorctl update
 
 ## Validating
-
 > Note: it can take a few seconds (60 or so) for the metrics to be collected by prometheus and made available.  
 
 When you view the list of dashboards available in Grafana, you'll see 3 new ones - each with a 'patching' tag, as shown below: 
@@ -107,6 +106,9 @@ Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
 Reference
 =
 Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
+
+# How can I be notified of updates? 
+Subscribe to this RSS feed: https://pypi.org/rss/project/filewave-extra-metrics/releases.xml
 
 # Developers
 
@@ -139,7 +141,14 @@ Panels provided:
 
 # Changelog
 
-17-Jun-2020:
+19-Jun-2020 (v32):
+- new: configuration for the polling delay, default is 30m (but re-queries happen automatically on model update and query changes)
+- new: work on making it possible to run this on a Mac server (experimental at this point)
+- cleaned up links on the Patch Status dashboard and fixed the tags/links to other dashboards
+- wrote unit tests to make sure that the dashboard JSON is correct before deploying it
+- corrected install/pip requirements that were missing 
+
+17-Jun-2020 (v29):
 - experimental: re-runs app queries if any new query is updated, model update is run - this paves the way for reducing the number of polling requests being made, once more events are being sent from the FW server
 - the app version dashboard now properly reflects the queries in the group 'Extra Metrics Queries - Apps', there is now one panel for each query.
 - the app version dashboard now contains a quicklinks panel; allowing users to quickly get into the web UI for each of their app queries

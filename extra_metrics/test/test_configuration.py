@@ -7,7 +7,6 @@ from extra_metrics.config import ExtraMetricsConfiguration
 from extra_metrics.test.fake_mocks import FakeQueryInterface
 
 from extra_metrics.scripts import (
-    provision_supervisord_runtime,
     running_on_a_fwxserver_host,
     validate_current_fw_version, ValidationExceptionCannotParseFileWaveVersion,
     ValidationExceptionWrongFileWaveVersion
@@ -69,9 +68,6 @@ class TestRuntimeChecks(unittest.TestCase):
     def test_validation_finds_incorrect_version(self):
         with self.assertRaises(ValidationExceptionWrongFileWaveVersion):
             validate_current_fw_version(self.fw_query)
-
-    def test_can_run_supervisord_provisioning(self):
-        provision_supervisord_runtime()
 
     def test_running_on_fwxserver_host(self):
         def my_check(yes_or_no, file_path):

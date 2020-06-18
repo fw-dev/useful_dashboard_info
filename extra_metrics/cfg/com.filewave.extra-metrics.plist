@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>KeepAlive</key>
+        <false/>
+        <key>Label</key>
+        <string>com.filewave.grafana</string>
+        <key>ProgramArguments</key>
+        <array>
+        <string>${EXTRA_METRICS_RUN}</string>
+        </array>
+        <key>RunAtLoad</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/usr/local/filewave/log/extra_metrics.err.log</string>
+    <key>StandardOutPath</key>
+    <string>/usr/local/filewave/log/extra_metrics.out.log</string>
+</dict>
+</plist>

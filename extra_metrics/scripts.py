@@ -122,7 +122,8 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
             try:
                 provision_dashboards_into_grafana(cfg.get_fw_api_server())
                 provision_prometheus_scrape_configuration()
-                provision_supervisord_runtime()
+                provision_launch_of_extra_metrics_on_host()
+
                 run_root_command(["/usr/local/sbin/grafana-cli",
                                   "--pluginsDir",
                                   "/usr/local/filewave/instrumentation_data/grafana/plugins",
@@ -158,9 +159,8 @@ def log_config_summary(cfg, major, minor, patch):
         f"Polling Interval : {poll_sec} sec / {poll_sec / 60.0:.1f} min")
 
 
-def provision_supervisord_runtime():
-    supervisord_dir = os.path.join(
-        "/usr/local/etc/filewave/supervisor/", "extras")
+def provision_launch_of_extra_metrics_on_host():
+    supervisord_dir = os.path.join("/usr/local/etc/filewave/supervisor/", "extras")
     if not os.path.exists(supervisord_dir):
         os.makedirs(supervisord_dir)
 
@@ -171,16 +171,17 @@ def provision_supervisord_runtime():
     full_extra_metrics_run_path = "extra-metrics-run"
     for f in os.listdir(exec_path):
         if f == "extra-metrics-run":
-            full_extra_metrics_run_path = os.path.join(
-                exec_path, full_extra_metrics_run_path)
+            full_extra_metrics_run_path = os.path.join(exec_path, full_extra_metrics_run_path)
 
-    data = pkg_resources.resource_string(
-        "extra_metrics.cfg", "extra_metrics_supervisord.conf").decode('utf-8')
-    provisioning_file = os.path.join(
-        supervisord_dir, 'extra_metrics_supervisord.conf')
+    if sys.platform == "darwin":
+        data = pkg_resources.resource_string("extra_metrics.cfg", "com.filewave.extra-metrics.plist").decode('utf-8')
+        provisioning_file = os.path.join("/Library/LaunchDaemons", "com.filewave.extra-metrics.plist")
+    else:
+        data = pkg_resources.resource_string("extra_metrics.cfg", "extra_metrics_supervisord.conf").decode('utf-8')
+        provisioning_file = os.path.join(supervisord_dir, "extra_metrics_supervisord.conf")
+
     with open(provisioning_file, "w+") as f:
-        new_data = data.replace(
-            r'${EXTRA_METRICS_RUN}', full_extra_metrics_run_path)
+        new_data = data.replace(r'${EXTRA_METRICS_RUN}', full_extra_metrics_run_path)
         f.write(new_data)
 
 
