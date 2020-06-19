@@ -21,8 +21,7 @@
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"ms-python.python",
-		"gruntfuggly.todo-tree",
-		"shd101wyy.markdown-preview-enhanced"
+		"gruntfuggly.todo-tree"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

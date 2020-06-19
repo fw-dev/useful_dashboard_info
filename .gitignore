@@ -19,3 +19,4 @@ htmlcov/**
 pypi.config
 .idea/**
 venv/**
+katalon/**

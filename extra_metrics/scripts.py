@@ -64,7 +64,8 @@ def running_on_a_fwxserver_host(exist_func=os.path.exists):
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
 @click.option('-i', '--interval', 'polling_interval', default=delay_30m, help='the seconds delay between successive queries against the FileWave system (default is 30m, 1800s)')
 @click.option('-s', '--skip-provisioning', is_flag=True, default=False, help='skips the local server provisioning, useful when this isnt running on a fw server')
-def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning):
+@click.option('-p', '--postgres_mtail', is_flag=True, default=False, help='injects the postgres mtail program')
+def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning, postgres_mtail):
     init_logging()
 
     cfg = ExtraMetricsConfiguration()
@@ -144,6 +145,20 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
 
     if present_warning:
         logger.warning("provisioning of metrics dashboards, setting prometheus scrape config and supervisord runtime was skipped as I didn't detect a FileWave Server installation - you can ignore this warning if you are intentionally setting this up on a different host (or in a container).  To avoid this warning entirely, run the configuration with --skip-provisioning")
+
+    if postgres_mtail:
+        inject_postgres_mtail_program()
+
+
+def inject_postgres_mtail_program():
+    if not running_on_a_fwxserver_host():
+        logger.error("requested injection of postgres mtail program, but we didn't detect a filewave server here - skipping")
+        return
+
+    # TODO: install the mtail program
+    # ensure log duration is set to something lower than defaults (warn if not)
+    # tell supervisord to have mtail scan the postgres logs too (--logs="/usr/local/filewave/fwxserver/DB/pg_data/pg_log/*.log")
+    # restart the server (actually just need postgres and mtail picks up programs automatically)
 
 
 def log_config_summary(cfg, major, minor, patch):

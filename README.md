@@ -111,7 +111,6 @@ Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
 Subscribe to this RSS feed: https://pypi.org/rss/project/filewave-extra-metrics/releases.xml
 
 # Developers
-
 To upload to PyPi, ensure you have the credentials in a pypi.config file (not checked into source control), then the ./rebuild_for_pypi.sh and ./upload_to_pypi.sh scripts are your friends. 
 
 An example pypi.config file contains: 

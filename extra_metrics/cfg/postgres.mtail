@@ -1,0 +1,78 @@
+# total log messages from Postgres
+counter postgresql_logs_total by severity
+
+# histogram of slow queries
+histogram postgresql_slow_queries_seconds buckets 0.0, 0.1, 0.5, 1.0, 2.5, 5.0, 10.0, 15.0, 20.0, 30.0, 50.0
+
+gauge postgresql_slow_queries_time by statement
+
+# Count of specific types of errors -- notably statement timeouts
+counter postgresql_errors_total by type
+
+# log_lock_wait times
+counter postgresql_lock_waits_total by mode, locktype
+
+# event logs produced by a command like:
+counter postgresql_event_logs_total by event
+
+counter postgresql_temp_files_total
+
+# The section below is for legacy, unstructured PostgreSQL logs.
+# It can be removed after structured logging (CSVs) is used everywhere.
+#
+# Match only the first line of a postgres error/log message and
+# extract the original timestamp from postgres and the severity from
+# the postgres log message.
+
+# 2020-06-19 16:41:27 GMT [22191]: [1] LOG:  duration: 10.331 ms  statement: SELECT DISTINCT "inventory_association"."as
+# 2020-06-19 17:00:13 GMT [24665]: [8] LOG:  duration: 10.345 ms  statement: SELECT * FROM pg_stat_bgwriter;
+# 2020-06-19 17:00:28 GMT [24665]: [9] LOG:  duration: 10.430 ms  statement: SELECT * FROM pg_stat_database;
+
+/^(?P<date>\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\ [A-Z]{3}) \[\d*]: \[\d] (?P<severity>DEBUG[1-5]|INFO|NOTICE|WARNING|ERROR|LOG|FATAL|PANIC):  / {
+    strptime($date, "2006-01-02 15:04:05 GMT")
+    postgresql_logs_total[$severity]++
+    
+    # Postgresql slow query duration log
+    # 2017-11-20_21:50:21.98628 db3
+    # postgresql: 2017-11-20 21:50:21 GMT [13277]: [1-1] LOG:  duration: 19925.268 ms  execute <unnamed>:
+    # 2018-01-02_20:29:03.67468 postgres-04 postgresql: 2018-01-02 20:29:03 GMT [118611]: [4-1] LOG:  duration: 5255.488 ms  execute <unnamed>:
+
+    /LOG:  duration: (?P<query_time>\d+\.\d+) ms  statement: (?P<statement>.*)$/ {
+      postgresql_slow_queries_seconds = $query_time / 1000.0
+      postgresql_slow_queries_time[$statement] = $query_time / 1000.0
+    }
+
+    /ERROR:  (?P<message>.*)$/ {
+      /canceling statement due to statement timeout/ {
+        postgresql_errors_total["statement_timeout"]++
+      }
+      /current transaction is aborted, commands ignored until end of transaction block/ {
+        postgresql_errors_total["transaction_is_aborted"]++
+      }
+      /canceling autovacuum task/ {
+        postgresql_errors_total["canceled_autovacuum"]++
+      }
+      /deadlock detected/ {
+        postgresql_errors_total["deadlock_detected"]++
+      }
+      /canceling statement due to user request/ {
+        postgresql_errors_total["canceled_by_user_request"]++
+      }
+      /duplicate key value violates unique constraint/ {
+        postgresql_errors_total["duplicate_key"]++
+      }
+      otherwise {
+        postgresql_errors_total["other"]++
+      }
+    }
+
+    /LOG:  (?P<message>.*)$/ {
+      /process [0-9]+ still waiting for (?P<mode>[a-zA-Z]+) on (?P<locktype>[a-zA-Z ]+) / {
+        postgresql_lock_waits_total[$mode,$locktype]++
+      }
+      /temporary file: path/ {
+        postgresql_temp_files_total++
+      }
+    }
+}
+
