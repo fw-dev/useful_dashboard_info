@@ -162,6 +162,10 @@ test_query_app_zoom_win = '''{
             "component": "Application"
         },
         {
+            "column": "filewave_client_name",
+            "component": "Client"
+        },
+        {
             "column": "device_id",
             "component": "Client"
         }

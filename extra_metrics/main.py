@@ -17,9 +17,9 @@ from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 
 # DONE: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
 
-# TODO: make it work on Mac too
+# DONE: make it work on Mac too
 
-# TODO: add mtail for scraping existing postgres logs for queries to get a list of the slow ones.
+# DONE: add mtail for scraping existing postgres logs for queries to get a list of the slow ones.
 
 # DONE: I really need a way to validate the dashboard files contain the right keys, this is critical for sane deployment
 
@@ -57,7 +57,8 @@ class MainRuntime:
 
         self.fw_query = FWRestQuery(
             hostname=self.cfg.get_fw_api_server(),
-            api_key=self.cfg.get_fw_api_key())
+            api_key=self.cfg.get_fw_api_key(),
+            verify_tls=self.cfg.get_verify_tls())
 
         self.app_qm = ApplicationQueryManager(self.fw_query)
         self.software_patches = SoftwarePatchStatus(self.fw_query)

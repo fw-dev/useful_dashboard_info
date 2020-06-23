@@ -1,6 +1,7 @@
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 from extra_metrics.fwrest import FWRestQuery
 from extra_metrics.logs import logger, init_logging
+import extra_metrics.platform as platform
 
 import os
 import click
@@ -63,9 +64,9 @@ def running_on_a_fwxserver_host(exist_func=os.path.exists):
 @click.option('-a', '--api-key', 'api_key', default=None, help='the FileWave API Key with appropriate rights to create groups/queries')
 @click.option('-e', '--external-dns-name', 'external_dns_name', default=None, help='the externally visible DNS name for the filewave server')
 @click.option('-i', '--interval', 'polling_interval', default=delay_30m, help='the seconds delay between successive queries against the FileWave system (default is 30m, 1800s)')
-@click.option('-s', '--skip-provisioning', is_flag=True, default=False, help='skips the local server provisioning, useful when this isnt running on a fw server')
-@click.option('-p', '--postgres_mtail', is_flag=True, default=False, help='injects the postgres mtail program')
-def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning, postgres_mtail):
+@click.option('-p', '--skip-provisioning', is_flag=True, default=False, help='skips the local server provisioning, useful when this isnt running on a fw server')
+@click.option('-v', '--dont-verify-tls', 'verify_tls', is_flag=True, default=True, help='whether or not to verify the server certificate (gets stored in config)')
+def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning, verify_tls):
     init_logging()
 
     cfg = ExtraMetricsConfiguration()
@@ -91,6 +92,7 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
 
     assert cfg.section is not None
 
+    cfg.set_verify_tls(verify_tls)
     if api_key is not None:
         cfg.set_fw_api_key(api_key)
     if external_dns_name is not None:
@@ -139,26 +141,12 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
         else:
             present_warning = True
 
-    q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key())
+    q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key(), cfg.get_verify_tls())
     major, minor, patch = validate_runtime_requirements(q)
     log_config_summary(cfg, major, minor, patch)
 
     if present_warning:
         logger.warning("provisioning of metrics dashboards, setting prometheus scrape config and supervisord runtime was skipped as I didn't detect a FileWave Server installation - you can ignore this warning if you are intentionally setting this up on a different host (or in a container).  To avoid this warning entirely, run the configuration with --skip-provisioning")
-
-    if postgres_mtail:
-        inject_postgres_mtail_program()
-
-
-def inject_postgres_mtail_program():
-    if not running_on_a_fwxserver_host():
-        logger.error("requested injection of postgres mtail program, but we didn't detect a filewave server here - skipping")
-        return
-
-    # TODO: install the mtail program
-    # ensure log duration is set to something lower than defaults (warn if not)
-    # tell supervisord to have mtail scan the postgres logs too (--logs="/usr/local/filewave/fwxserver/DB/pg_data/pg_log/*.log")
-    # restart the server (actually just need postgres and mtail picks up programs automatically)
 
 
 def log_config_summary(cfg, major, minor, patch):
@@ -168,6 +156,7 @@ def log_config_summary(cfg, major, minor, patch):
     logger.info(f"External DNS     : {cfg.get_fw_api_server()}")
     logger.info(f"API Key          : {cfg.get_fw_api_key()}")
     logger.info(f"FileWave Server  : {major}.{minor}.{patch}")
+    logger.info(f"Verify Certs     : {cfg.get_verify_tls()}")
 
     poll_sec = cfg.get_polling_delay_seconds()
     logger.info(
@@ -238,7 +227,8 @@ def provision_prometheus_scrape_configuration():
             provisioning_file = os.path.join(prometheus_dir, yaml_file)
             with open(provisioning_file, 'wb') as f:
                 f.write(data)
-            shutil.chown(provisioning_file, user="apache", group="apache")
+            prov_owner = platform.get_web_username()
+            shutil.chown(provisioning_file, user=prov_owner, group=prov_owner)
 
 
 def validate_current_fw_version(fw_query):

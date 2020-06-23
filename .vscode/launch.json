@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: Extra Metrics Run",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "main.py",
             "console": "integratedTerminal"
         },
         {
@@ -16,9 +16,9 @@
             "type": "python",
             "request": "launch",
             "program": "test",
-            "env": {
-                "PYTHONPATH": "${workspaceFolderBasename}"
-            },
+            // "env": {
+            //     "PYTHONPATH": "${workspaceFolderBasename}"
+            // },
             "console": "integratedTerminal"
         }
     ]

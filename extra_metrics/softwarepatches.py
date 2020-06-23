@@ -122,6 +122,10 @@ class SoftwarePatchStatus:
             logger.info("no results for software update patch status per device received from FileWave server")
             return None
 
+        if "fields" not in j:
+            logger.info("no fields meta data for software update patch status per device received from FileWave server")
+            return None
+
         df = pd.DataFrame(j["values"], columns=j["fields"])
         platform_mapping = {
             "0": "Apple",

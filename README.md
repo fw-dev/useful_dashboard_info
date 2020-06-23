@@ -22,16 +22,22 @@ Minimum FileWave system requirements:
 # Installation
 These instructions assume you will be installing Extra Metrics directly on your FileWave Server, which already has Python3.7 (or later) installed.
 
+Important:
 > We *highly* recommend installing Extra Metrics into its own python virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
 
 > DO NOT INSTALL EXTRA METRICS DIRECTLY INTO THE PYTHON RUNTIME ENVIRONMENT OF YOUR FILEWAVE SERVER.  
 
 > If you are unsure about the above statement - STOP - contact your FileWave SE or support.  Your FileWave Server installation can be destroyed by mis-understanding the impact of this configuration.
 
+Mac:
+> On a Mac, you must install a versio of Python that allows non-codesigned binaries to be installed into the Python environment.  
+
+>_It is not possible to use the FileWave provided version of Python to run Extra Metrics_ 
+
 ## Installation Steps (requires SSH)
 Assuming you are already logged into your FileWave Server using SSH, follow along to set up the virtual environment, install the Extra Metrics package and configure it for use. 
 
-For the purpose of these instructions we are assuming a non-root user called gregor has been created.
+For the purpose of these instructions we are assuming a non-root user is being used.
 
     $ /usr/local/filewave/python/bin/pyvenv $HOME/extra-metrics
     $ source $HOME/extra-metrics/bin/activate
@@ -47,7 +53,7 @@ Extra Metrics should be configured with an Inventory API Key in order to access 
 
 > Please create a unique access token (API Key) for the Extra Metrics module
 
-> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo.
+> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement.
 
 Once you have the API key; use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes). 
 
@@ -72,7 +78,7 @@ You will see output similar to the following, confirming that the dashboards hav
 [extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
 ```
 
-## Upgrade the grafana-pie-chart plugin (for best results)
+## Upgrade the grafana-pie-chart plugin (this is done by extra-metrics-config for you, and it just here for reference)
 The pie chart plugin likely needs an update.  You can upgrade it to the latest version using the following command:
 
     $ grafana-cli --pluginsDir /usr/local/filewave/instrumentation_data/grafana/plugins plugins update grafana-piechart-panel
@@ -139,6 +145,10 @@ Panels provided:
  - TBD (disk space, outstanding patches)
 
 # Changelog
+
+23-Jun-2020 (v35)
+- new (and experimental): works on Mac; but *requires* a brew installed Python instance; the built-in FileWave python 3.7 binaries will not work as they don't allow non codesigned PyPi packages to be installed.  FileWave Extra Metrics uses numpy, which is unsigned.
+- new option (--dont-verify-tls) for extra-metrics-config; turns off TLS verification - the change is stored in configuration
 
 19-Jun-2020 (v32):
 - new: configuration for the polling delay, default is 30m (but re-queries happen automatically on model update and query changes)

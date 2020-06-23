@@ -27,6 +27,7 @@ class TestConfiguration(unittest.TestCase):
     def test_configuration_defaults(self):
         self.assertEqual("abc", self.cfg.get_fw_api_server())
         self.assertEqual("def", self.cfg.get_fw_api_key())
+        self.assertEqual(True, self.cfg.get_verify_tls())
 
     def test_configuration_changes_are_written(self):
         self.cfg.set_fw_api_key('hello world')
@@ -37,6 +38,13 @@ class TestConfiguration(unittest.TestCase):
         self.assertTrue("hello world" in value)
         self.assertTrue("42" in value)
         self.assertEqual(self.cfg.get_polling_delay_seconds(), 42)
+
+        self.assertEqual(True, self.cfg.get_verify_tls())
+        self.cfg.set_verify_tls(False)
+        self.assertEqual(False, self.cfg.get_verify_tls())
+
+        self.cfg.set_verify_tls(True)
+        self.assertEqual(True, self.cfg.get_verify_tls())
 
 
 def get_unparsable_version(self):

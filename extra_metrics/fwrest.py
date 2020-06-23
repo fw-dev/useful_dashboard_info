@@ -23,9 +23,10 @@ http_request_time_taken_get_software_updates_web = http_request_time_taken.label
 # TODO: all these methods should return either s or json, but how is one supposed to know from the name?
 
 class FWRestQuery:
-    def __init__(self, hostname, api_key):
+    def __init__(self, hostname, api_key, verify_tls=True):
         self.hostname = hostname
         self.api_key = api_key
+        self.verify_tls = verify_tls
         super()
 
     def _fw_run_inv_query(self, additional=None):
@@ -46,7 +47,7 @@ class FWRestQuery:
 
     def get_current_fw_version_major_minor_patch(self):
         # uses /api/config/app to get version information - format is "app_version": "14.0.0<-something>"
-        r = requests.get(self._fw_run_web_query('config/app'), headers=self._auth_headers())
+        r = requests.get(self._fw_run_web_query('config/app'), headers=self._auth_headers(), verify=self.verify_tls)
         self._check_status(r, 'get_current_fw_version')
         exp = re.compile(r'(\d+).(\d+).(\d+)-(.*)', re.IGNORECASE)
         match_result = re.search(exp, r.json()["app_version"])
@@ -60,7 +61,7 @@ class FWRestQuery:
 
     def get_definition_for_query_id_j(self, query_id):
         r = requests.get(self._fw_run_inv_query(f'query/{query_id}'),
-                         headers=self._auth_headers())
+                         headers=self._auth_headers(), verify=self.verify_tls)
         self._check_status(r, 'get_definition_for_query_id_j')
         if r.status_code == 200:
             return r.json()
@@ -69,14 +70,14 @@ class FWRestQuery:
 
     def get_results_for_query_id(self, query_id):
         r = requests.get(self._fw_run_inv_query(f'query_result/{query_id}'),
-                         headers=self._auth_headers())
+                         headers=self._auth_headers(), verify=self.verify_tls)
         self._check_status(r, 'get_results_for_query_id')
         return r
 
     def find_group_with_name(self, group_name):
         # get the group, is it there?
         r = requests.get(self._fw_run_web_query(
-            'reports/groups_tree'), headers=self._auth_headers())
+            'reports/groups_tree'), headers=self._auth_headers(), verify=self.verify_tls)
 
         self._check_status(r, 'find_group_with_name')
 
@@ -94,14 +95,15 @@ class FWRestQuery:
 
         group_create_data = json.dumps({"name": group_name})
         requests.post(self._fw_run_web_query('reports/groups/'),
-                      headers=self._auth_headers(),
+                      headers=self._auth_headers(), 
+                      verify=self.verify_tls,
                       data=group_create_data)
 
         return self.find_group_with_name(group_name), True
 
     def get_all_inventory_queries(self):
         r = requests.get(self._fw_run_inv_query('query/'),
-                         headers=self._auth_headers())
+                         headers=self._auth_headers(), verify=self.verify_tls)
 
         self._check_status(r, 'get_all_inventory_queries')
         if r.status_code == 200:
@@ -113,18 +115,21 @@ class FWRestQuery:
         # just create only, don't validate if it exists....
         return requests.post(self._fw_run_inv_query('query/'),
                              headers=self._auth_headers(),
+                             verify=self.verify_tls,
                              data=json_str)
 
     @http_request_time_taken_get_client_info.time()
     def get_client_info(self):
         return requests.post(self._fw_run_inv_query('query_result/'),
                              headers=self._auth_headers(),
+                             verify=self.verify_tls,
                              data=query_client_info)
 
     @http_request_time_taken_get_software_patches.time()
     def get_software_patches_j(self):
         r = requests.post(self._fw_run_inv_query('query_result/'),
                           headers=self._auth_headers(),
+                          verify=self.verify_tls,
                           data=query_software_patches)
 
         self._check_status(r, 'get_software_patches_j')
@@ -136,7 +141,7 @@ class FWRestQuery:
     @http_request_time_taken_get_software_updates_web.time()
     def get_software_updates_web_ui_j(self):
         r = requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
-                         headers=self._auth_headers())
+                         headers=self._auth_headers(), verify=self.verify_tls)
 
         self._check_status(r, 'get_software_updates_web_ui_j')
         if r.status_code == 200:

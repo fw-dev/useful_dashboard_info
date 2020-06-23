@@ -1,6 +1,5 @@
 import configparser
 import os
-from zmq.utils.z85 import decode as decode_z85
 from extra_metrics.logs import logger
 
 
@@ -17,6 +16,7 @@ class ExtraMetricsConfiguration:
     KEY_FW_SERVER_HOSTNAME = 'fw_server_hostname'
     KEY_FW_SERVER_API_KEY = 'fw_server_api_key'
     KEY_POLLING_DELAY = 'fw_query_polling_delay_seconds'
+    KEY_VERIFY_TLS = 'fw_verify_tls'
 
     def __init__(self):
         self.config = configparser.ConfigParser()
@@ -61,3 +61,9 @@ class ExtraMetricsConfiguration:
 
     def set_polling_delay_seconds(self, value):
         self._set_value(ExtraMetricsConfiguration.KEY_POLLING_DELAY, str(value))
+
+    def get_verify_tls(self):
+        return self.section.getboolean(ExtraMetricsConfiguration.KEY_VERIFY_TLS, True)
+
+    def set_verify_tls(self, value):
+        self._set_value(ExtraMetricsConfiguration.KEY_VERIFY_TLS, "on" if value else "off")

@@ -25,7 +25,7 @@ class DashboardTestCase(unittest.TestCase):
                 # at least for now; all dashboards should have a "patching" tag
                 patching_tag = "patching"
                 tags = j["tags"]
-                self.assertIn(patching_tag, tags, f"{filename} doesn't have a dashboard tag to link them all together - critical error")
+                self.assertIn(patching_tag, tags, f"{filename} doesn't have a dashboard tag to link them all together - tags contains: {tags}")
 
                 # and they should link to other dashboards with patching too
                 links = j["links"]
