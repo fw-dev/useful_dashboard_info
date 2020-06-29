@@ -426,7 +426,12 @@
       "type": "row"
     },
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "Less than 1 day": "green",
+        "Less than 7 days": "yellow",
+        "7 - 30 days": "orange",
+        "> 30 days": "red"
+      },
       "bars": true,
       "cacheTimeout": null,
       "dashLength": 10,

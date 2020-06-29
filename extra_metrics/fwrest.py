@@ -140,7 +140,7 @@ class FWRestQuery:
 
     @http_request_time_taken_get_software_updates_web.time()
     def get_software_updates_web_ui_j(self):
-        r = requests.get(self._fw_run_web_query('updates/ui/?limit=10000'),
+        r = requests.get(self._fw_run_web_query('updates/extended_list/?limit=10000'),
                          headers=self._auth_headers(), verify=self.verify_tls)
 
         self._check_status(r, 'get_software_updates_web_ui_j')

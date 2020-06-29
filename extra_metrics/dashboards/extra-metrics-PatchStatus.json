@@ -117,7 +117,10 @@
   ],
   "panels": [
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "Apple": "#F2CC0C",
+        "Microsoft": "#3274D9"
+      },
       "breakPoint": "50%",
       "cacheTimeout": null,
       "combine": {
@@ -171,7 +174,13 @@
       "valueName": "current"
     },
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "Assigned": "green",
+        "Remaining": "#4A90E2",
+        "Completed": "#7ED321",
+        "Error": "#E11702",
+        "Warning": "#F5A623"
+      },      
       "breakPoint": "50%",
       "cacheTimeout": null,
       "combine": {
@@ -225,7 +234,13 @@
       "valueName": "current"
     },
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "Assigned": "green",
+        "Remaining": "#4A90E2",
+        "Completed": "#7ED321",
+        "Error": "#E11702",
+        "Warning": "#F5A623"
+      }, 
       "bars": false,
       "dashLength": 10,
       "dashes": false,
@@ -584,7 +599,12 @@
       "type": "table"
     },
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "Error": "#E11702",
+        "Ok": "#7ED321",
+        "Unknown": "#3274D9",
+        "Warning": "#F5A623"
+      },
       "breakPoint": "50%",
       "cacheTimeout": null,
       "combine": {

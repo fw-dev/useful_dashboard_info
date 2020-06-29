@@ -7,15 +7,15 @@ software_updates_by_state = Gauge('extra_metrics_software_updates_by_state',
     ["state"])
 
 software_updates_by_device = Gauge('extra_metrics_software_updates_by_device',
-    'list of devices and the number of [critical] updates they need to have installed',
+    'list of devices and the number of [critical] updates they need to have installed, completed updates are not included in this count',
     ["device_name", "device_id", "is_update_critical"])
 
 software_updates_by_update = Gauge('extra_metrics_software_updates_by_update',
-    'list of updates and the number of devices asking to have installed',
+    'list of updates and the number of devices asking to have installed, completed updates are not included in this count',
     ["update_name", "fw_id"])
 
 software_updates_by_platform = Gauge('extra_metrics_software_updates_by_platform',
-    'list of platforms and the number of [critical] updates they have available',
+    'list of platforms and the number of [critical] updates they have available, completed updates are not included in this count',
     ["platform_name", "is_update_critical"])
 
 
@@ -50,9 +50,11 @@ class SoftwarePatchStatus:
             logger.info("no results for software update patch status received from FileWave server")
             return None
 
+        # device_id references generic_client
+
         columns = [
             "update_name",
-            "fw_id",
+            "update_id",
             "platform",
             "unassigned",
             "assigned",
@@ -64,6 +66,30 @@ class SoftwarePatchStatus:
 
         values = [
         ]
+
+        '''
+        for a SU - completed is: 
+            count_requested > 0
+            unassigned_devices.count == 0
+            assigned_devices.remaining == 0
+            assigned_device.completed = count_requested
+
+        to get software updates for a device: 
+            all devices with their id in assigned_devices.assigned/warning/remaining/error
+
+        
+
+        software_updates_by_device
+        the number of updates per device, NOT counting completed update.
+
+        software_updates_by_update
+        list of updates and the number of devices asking to have installed,
+        completed updates are not included in this count
+
+        software_updates_by_platform
+        list of platforms and the number of [critical] updates they have
+        available, completed updates are not included in this count
+        '''
 
         res = j["results"]
         for item in res:
@@ -79,7 +105,7 @@ class SoftwarePatchStatus:
 
             values.append([
                 update_name,
-                item["id"],
+                update_id,
                 item["platform"],
                 item["count_unassigned"],
                 acc["assigned"],
@@ -90,8 +116,7 @@ class SoftwarePatchStatus:
             ])
 
         df = pd.DataFrame(values, columns=columns)
-
-        per_update_totals = df.groupby(["update_name", "fw_id"], as_index=False)["unassigned"].sum()
+        per_update_totals = df.groupby(["update_name", "update_id"], as_index=False)["unassigned"].sum()
         for item in per_update_totals.to_numpy():
             software_updates_by_update.labels(item[0], item[1]).set(item[2])
 
@@ -126,6 +151,8 @@ class SoftwarePatchStatus:
             logger.info("no fields meta data for software update patch status per device received from FileWave server")
             return None
 
+        # this is just a list of the avail patches, this data does not yet
+        # tell us if the patch has been installed on the device.
         df = pd.DataFrame(j["values"], columns=j["fields"])
         platform_mapping = {
             "0": "Apple",
