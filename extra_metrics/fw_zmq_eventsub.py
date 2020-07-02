@@ -40,6 +40,8 @@ class ZMQConnector:
             # for the client socket, the curve key pair will be regenerated all the time
             # the important part for "authentication" is the server "public" key
             self.__socket.curve_publickey, self.__socket.curve_secretkey = zmq.curve_keypair()
+        else:
+            logger.info("no ZMQ subscriber keypair exists; assuming compat mode")
 
         self.__socket.connect(get_zmq_broker_xsub_endpoint(self.cfg))
 

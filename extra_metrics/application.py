@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import sys
 
+from extra_metrics.package import get_package_resource_json
 from .fwrest import http_request_time_taken
 from .logs import logger
 
@@ -84,8 +85,7 @@ class ApplicationQueryManager:
     def create_default_queries_in_group(self, group_id):
         for query_file in pkg_resources.resource_listdir("extra_metrics", "app_queries"):
             if query_file.endswith(".json"):
-                f = pkg_resources.resource_string("extra_metrics.app_queries", query_file)
-                json_data = json.loads(f)
+                json_data = get_package_resource_json("extra_metrics.app_queries", query_file)
                 json_data["group"] = group_id
                 self.fw_query.create_inventory_query(json.dumps(json_data))
 

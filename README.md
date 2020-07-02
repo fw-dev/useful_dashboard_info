@@ -146,6 +146,14 @@ Panels provided:
 
 # Changelog
 
+01-Jul-2020 (v36)
+- fixed: look for zmq_subscribe_curve.keypair in /usr/local/filewave/certs
+- fixed: health metrics per device now make use of feedback from software update.
+- fixed: bad data causes a crash in some of the compliance calculations.
+- new: additional log messages on startup to help describe why an abort might happen (bad api keys, no data returned from health checks)
+- new: added unit tests for the software update aggregations via the web rest API
+- changed: redefined the software update metrics to distinguish between completed patches, and everything else
+
 23-Jun-2020 (v35)
 - new (and experimental): works on Mac; but *requires* a brew installed Python instance; the built-in FileWave python 3.7 binaries will not work as they don't allow non codesigned PyPi packages to be installed.  FileWave Extra Metrics uses numpy, which is unsigned.
 - new option (--dont-verify-tls) for extra-metrics-config; turns off TLS verification - the change is stored in configuration

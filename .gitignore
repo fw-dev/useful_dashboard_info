@@ -20,3 +20,4 @@ pypi.config
 .idea/**
 venv/**
 katalon/**
+zmq_subscribe_curve.keypair

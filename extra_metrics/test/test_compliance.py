@@ -3,6 +3,10 @@ from extra_metrics.compliance import ClientCompliance
 
 
 class TestClientComplianceCase(unittest.TestCase):
+    def test_compliance_for_div_by_zero(self):
+        c = ClientCompliance(0, 0, 0)
+        self.assertEqual(c.get_disk_compliance(), ClientCompliance.STATE_UNKNOWN)
+
     def test_compliance_with_no_data(self):
         c = ClientCompliance(None, None, None)
         self.assertEqual(c.get_checkin_compliance(),

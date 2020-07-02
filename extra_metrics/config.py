@@ -31,8 +31,7 @@ class ExtraMetricsConfiguration:
         self.config.write(file_obj)
 
     def get_zmq_subscribe_keypair(self):
-        config_dir = os.path.dirname(ExtraMetricsConfiguration.DEFAULT_CFG_FILE_LOCATION)
-        zmq_subscribe_keypair_file = os.path.join(config_dir, "zmq_subscribe_curve.keypair")
+        zmq_subscribe_keypair_file = os.path.join("/usr/local/filewave/certs", "zmq_subscribe_curve.keypair")
         if os.path.exists(zmq_subscribe_keypair_file):
             with open(zmq_subscribe_keypair_file, 'rb') as f:
                 return f.readline()

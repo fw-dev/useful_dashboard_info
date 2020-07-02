@@ -5,20 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Unittest",
+            "type": "python",
+            "request": "launch",
+            "module": "unittest",
+            "args": [ "discover" ]
+        },
+        {
             "name": "Python: Extra Metrics Run",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Python: Run Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "test",
-            // "env": {
-            //     "PYTHONPATH": "${workspaceFolderBasename}"
-            // },
+            "program": "test.py",
             "console": "integratedTerminal"
         }
     ]

@@ -43,15 +43,16 @@ class ClientCompliance:
 
         # < 20% left is warning
         # < 5% left is critical, or less than 5g
-        space_left_pcnt = (float(self.free_disk) / float(self.total_disk)) * 100.0
-
         space_compliance = ClientCompliance.STATE_UNKNOWN
-        if space_left_pcnt >= 20:
-            space_compliance = ClientCompliance.STATE_OK
-        elif space_left_pcnt < 5:
-            space_compliance = ClientCompliance.STATE_ERROR
-        else:
-            space_compliance = ClientCompliance.STATE_WARNING  # its just less than 20
+        if self.free_disk > 0 and self.total_disk > 0:
+            space_left_pcnt = (float(self.free_disk) / float(self.total_disk)) * 100.0
+
+            if space_left_pcnt >= 20:
+                space_compliance = ClientCompliance.STATE_OK
+            elif space_left_pcnt < 5:
+                space_compliance = ClientCompliance.STATE_ERROR
+            else:
+                space_compliance = ClientCompliance.STATE_WARNING  # its just less than 20
 
         return space_compliance
 

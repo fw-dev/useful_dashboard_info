@@ -49,8 +49,15 @@ class FWRestQuery:
         # uses /api/config/app to get version information - format is "app_version": "14.0.0<-something>"
         r = requests.get(self._fw_run_web_query('config/app'), headers=self._auth_headers(), verify=self.verify_tls)
         self._check_status(r, 'get_current_fw_version')
+
+        j_value = r.json()
+        if j_value is None:
+            raise Exception("Obtaining major/minor/patch info from the server didnt return data; aborting")
+        if "app_version" not in j_value:
+            raise Exception("app_version data isnt in the returned data from the fw server; aborting")
+
         exp = re.compile(r'(\d+).(\d+).(\d+)-(.*)', re.IGNORECASE)
-        match_result = re.search(exp, r.json()["app_version"])
+        match_result = re.search(exp, j_value["app_version"])
         major, minor, patch = 0, 0, 0
         if match_result is not None:
             major = int(match_result.group(1))

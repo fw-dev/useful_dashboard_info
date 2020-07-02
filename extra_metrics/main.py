@@ -13,6 +13,10 @@ from extra_metrics.fwrest import FWRestQuery
 from extra_metrics.fw_zmq_eventsub import ZMQConnector
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 
+# FIX: bad data in compliance causes the routines to crash
+
+# FIX: bad data in the platform metadata causes the routines to crash
+
 # DONE: upgrade the pie chart plugin in on-box upgrade/install 
 
 # DONE: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
@@ -25,9 +29,13 @@ from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 
 # IDEAS: if the configuration of the FW server changes, how does this product keep up?
 
+# TODO: to make associations clickable, direct users into the extra-metrics program, have that inject a real FW query on the fly and then redirect to that.
+
 # TODO: mock the fwrestquery API itself, to prove that all methods produce the right reactions.
 
 # TODO: DEVICE HEALTH show the reasons/state of health of a device in (my app or) custom fields so it can be reported on
+
+# TODO: DEVICE HEALTH - if a query underneath a special group is called 'Extra Health Checks'; then clients have to be part of that to be healthy.  Question; if they are not - what error message is produced?
 
 # TODO: consider alerts for devices entering a non-healthy state for the first time today
 
@@ -133,6 +141,17 @@ async def create_program_and_run_it():
 
 def serve_and_process():
     asyncio.run(create_program_and_run_it())
+
+
+async def create_program_and_run_tests():
+    init_logging()
+    prog = MainRuntime(logger)
+    prog.init_services()
+    prog.software_patches.collect_patch_data_status()
+
+
+def run_tests():
+    asyncio.run(create_program_and_run_tests())
 
 
 if __name__ == "__main__":
