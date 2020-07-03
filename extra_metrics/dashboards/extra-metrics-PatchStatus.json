@@ -250,7 +250,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state!=\"Assigned\", state!=\"Requested\", state!=\"Unassigned\"}",
+          "expr": "extra_metrics_software_updates_by_state{state!=\"Completed\", state!=\"Assigned\", state!=\"Requested\", state!=\"Unassigned\"}",
           "instant": true,
           "legendFormat": "{{state}}",
           "refId": "A"
@@ -334,7 +334,7 @@
       "timeShift": null,
       "title": "# Patches / Time",
       "tooltip": {
-        "shared": true,
+        "shared": false,
         "sort": 0,
         "value_type": "individual"
       },
@@ -521,7 +521,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state=\"Assigned\"}",
+          "expr": "sum(extra_metrics_software_updates_by_state{state=\"Assigned\"}) - sum(extra_metrics_software_updates_by_state{state=\"Completed\"})",
           "instant": true,
           "legendFormat": "{{state}}",
           "refId": "A"
@@ -647,8 +647,8 @@
       "pageSize": null,
       "showHeader": true,
       "sort": {
-        "col": null,
-        "desc": false
+        "col": 3,
+        "desc": true
       },
       "styles": [
         {
@@ -1192,7 +1192,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(software_updates_remaining_by_device)",
+          "expr": "count(sum(extra_metrics_software_updates_remaining_by_device) by (device_name))",
           "instant": false,
           "refId": "A"
         }

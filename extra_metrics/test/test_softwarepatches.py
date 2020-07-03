@@ -53,10 +53,12 @@ class TestSoftwarePatchFetching(unittest.TestCase):
         self.assertEqual(after, 175, "the number of Unassigned software updates is incorrect")
 
         after = REGISTRY.get_sample_value('extra_metrics_software_updates_by_popularity',
-                                          labels={"update_name": "iTunes Device Support Update",
-                                                  "update_id": "041-88833", "state": "Not Started"})
-        self.assertEqual(after, 0, "iTunes Device Support Update should report in progress of 0 units")
+                                          labels={"update_name": "iTunes Device Support Update (041-88833)",
+                                                  "update_id": "3", "state": "Not Started"})
+        self.assertEqual(after, 2, "iTunes Device Support Update should report in progress of 2 units")
 
         # go to devices 1 & 8 - they should indicate appropriate counts of not-started
-        device_7 = mgr.get_perdevice_state(7)
-        self.assertEqual(device_7.get_counter(False).remaining, 4)
+        device = mgr.get_perdevice_state(7)
+        self.assertEqual(device.get_counter(False).remaining, 4)
+
+        # TODO: pick out a device and check it has the right number of outstanding updates...

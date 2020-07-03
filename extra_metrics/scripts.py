@@ -127,19 +127,19 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
                 provision_prometheus_scrape_configuration()
                 provision_launch_of_extra_metrics_on_host()
 
-                run_root_command(["/usr/local/sbin/grafana-cli",
-                                  "--pluginsDir",
-                                  "/usr/local/filewave/instrumentation_data/grafana/plugins",
-                                  "plugins",
-                                  "update",
-                                  "grafana-piechart-panel"])
+                plugins = [
+                    {"command": "update", "name": "grafana-piechart-panel"},
+                    {"command": "install", "name": "michaeldmoore-multistat-panel"},
+                    {"command": "install", "name": "simpod-json-datasource"}
+                ]
 
-                run_root_command(["/usr/local/sbin/grafana-cli",
-                                  "--pluginsDir",
-                                  "/usr/local/filewave/instrumentation_data/grafana/plugins",
-                                  "plugins",
-                                  "install",
-                                  "michaeldmoore-multistat-panel"])
+                for plugin in plugins:
+                    run_root_command(["/usr/local/sbin/grafana-cli",
+                                      "--pluginsDir",
+                                      "/usr/local/filewave/instrumentation_data/grafana/plugins",
+                                      "plugins",
+                                      plugin["command"],
+                                      plugin["name"]])
 
             except Exception as e:
                 logger.error(
