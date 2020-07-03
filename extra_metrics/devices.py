@@ -1,6 +1,7 @@
 from prometheus_client import Gauge
 import pandas as pd
 import datetime
+from datetime import timezone
 from extra_metrics.compliance import ClientCompliance
 from extra_metrics.logs import logger
 
@@ -36,7 +37,6 @@ device_client_locked = Gauge('extra_metrics_per_device_locked',
 class PerDeviceStatus:
     def __init__(self, fw_query):
         self.fw_query = fw_query
-        self.state_by_patch = {}
 
     def _rollup_by_single_column_count_client_filewave_id(self, df, column_name):
         return df.groupby([column_name], as_index=False)["Client_filewave_id"].count()
@@ -55,8 +55,7 @@ class PerDeviceStatus:
         DesktopClient_filewave_model_number = 18
         Client_total_disk_space = 24
 
-        r = self.fw_query.get_client_info()
-        j = r.json()
+        j = self.fw_query.get_client_info_j()
 
         try:
             assert j["fields"]
@@ -115,10 +114,10 @@ class PerDeviceStatus:
 
                 client_fw_id = v[Client_filewave_id]
                 if client_fw_id is not None:
-                    per_device_state = soft_patches.get_perdevicestate_for_client_id(client_fw_id)
+                    per_device_state = soft_patches.get_perdevice_state(client_fw_id)
                     if per_device_state is not None:
-                        total_crit = per_device_state.critical_patch_count
-                        total_normal = per_device_state.standard_patch_count
+                        total_crit = per_device_state.get_counter(True).total_not_completed()
+                        total_normal = per_device_state.get_counter(False).total_not_completed()
 
                     device_client_modelnumber.labels(
                         v[Client_device_name]

@@ -12,8 +12,6 @@ http_request_time_taken = Histogram('extra_metrics_http_request_time_taken',
 
 http_request_time_taken_get_client_info = http_request_time_taken.labels(
     'get_client_info')
-http_request_time_taken_get_software_patches = http_request_time_taken.labels(
-    'get_software_patches')
 http_request_time_taken_get_applications = http_request_time_taken.labels(
     'get_applications')
 http_request_time_taken_get_software_updates_web = http_request_time_taken.labels(
@@ -102,7 +100,7 @@ class FWRestQuery:
 
         group_create_data = json.dumps({"name": group_name})
         requests.post(self._fw_run_web_query('reports/groups/'),
-                      headers=self._auth_headers(), 
+                      headers=self._auth_headers(),
                       verify=self.verify_tls,
                       data=group_create_data)
 
@@ -126,20 +124,13 @@ class FWRestQuery:
                              data=json_str)
 
     @http_request_time_taken_get_client_info.time()
-    def get_client_info(self):
-        return requests.post(self._fw_run_inv_query('query_result/'),
-                             headers=self._auth_headers(),
-                             verify=self.verify_tls,
-                             data=query_client_info)
-
-    @http_request_time_taken_get_software_patches.time()
-    def get_software_patches_j(self):
+    def get_client_info_j(self):
         r = requests.post(self._fw_run_inv_query('query_result/'),
                           headers=self._auth_headers(),
                           verify=self.verify_tls,
-                          data=query_software_patches)
+                          data=query_client_info)
 
-        self._check_status(r, 'get_software_patches_j')
+        self._check_status(r, 'get_client_info_j')
         if r.status_code == 200:
             return r.json()
 

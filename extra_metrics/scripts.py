@@ -133,6 +133,14 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
                                   "plugins",
                                   "update",
                                   "grafana-piechart-panel"])
+
+                run_root_command(["/usr/local/sbin/grafana-cli",
+                                  "--pluginsDir",
+                                  "/usr/local/filewave/instrumentation_data/grafana/plugins",
+                                  "plugins",
+                                  "install",
+                                  "michaeldmoore-multistat-panel"])
+
             except Exception as e:
                 logger.error(
                     "Error during provisioning of prometheus/grafana, are you using sudo?")
@@ -245,10 +253,10 @@ def validate_current_fw_version(fw_query):
 
 
 def validate_current_api_keys_rights(fw_query):
+    # TODO: validate the rights of the current API key, aborting if they are not sufficient
     pass
 
 
 def validate_runtime_requirements(q):
-    # TODO: can I upgrade the grafana pie chart automatically?
     validate_current_api_keys_rights(q)
     return validate_current_fw_version(q)

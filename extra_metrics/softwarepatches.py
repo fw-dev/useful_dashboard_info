@@ -1,47 +1,91 @@
 from prometheus_client import Gauge
 import pandas as pd
+import datetime
+from datetime import timezone
 from extra_metrics.logs import logger
 
 software_updates_by_state = Gauge('extra_metrics_software_updates_by_state',
     'buckets of all the software updates by state - the value is the number of devices in each state, this includes completed updates',
-    ["state"])  
+    ["state"])
+
+software_updates_by_critical = Gauge('extra_metrics_software_updates_by_critical',
+    'lists all the updates, indicating the number of normal vs critical updates currently known by the server',
+    ["platform", "is_critical"])
 
 software_updates_by_popularity = Gauge('extra_metrics_software_updates_by_popularity',
     'list of software updates and the number of devices still needing the update (unassigned), completed updates are not included in this count',
-    ["update_name", "update_id"])
+    ["update_name", "update_id", "state"])
 
-software_updates_by_platform = Gauge('extra_metrics_software_updates_by_platform',
-    'list of platforms and the number of [critical] updates they have available, completed updates are not included in this count',
-    ["platform_name", "is_update_critical"])
+software_updates_by_age = Gauge('extra_metrics_software_updates_by_age',
+    'list of software updates and their age in days, all updates including completed ones are included here.  The value of the metric is the age in days (from now)',
+    ["update_name", "update_id", "created_date"])
 
-software_updates_by_device = Gauge('extra_metrics_software_updates_by_device',
-    'list of devices and the number of [critical] updates they need to have installed, completed updates are not included in this count',
+software_updates_remaining_by_device = Gauge('extra_metrics_software_updates_remaining_by_device',
+    'list of devices and the number of [critical] updates they have remaining to be installed, completed updates are not included in this count',
     ["device_name", "device_id", "is_update_critical"])
+
+
+class PatchStateCounts:
+    def __init__(self):
+        self.error = 0
+        self.warning = 0
+        self.assigned = 0
+        self.remaining = 0
+        self.completed = 0
+
+    def total(self):
+        return self.assigned
+
+    def validate_sanity_of_numbers(self):
+        assert self.assigned == self.error + self.warning + self.remaining + self.completed
+
+    def total_not_completed(self):
+        return self.total() - self.completed
 
 
 class PerDevicePatchState:
     def __init__(self, client_id):
         self.client_id = client_id
         self.client_name = None
-        self.critical_patch_count = 0
-        self.standard_patch_count = 0
+        self.count_crits = PatchStateCounts()
+        self.count_normal = PatchStateCounts()
+
+    def get_counter(self, is_update_critcal):
+        if is_update_critcal:
+            return self.count_crits
+        return self.count_normal
 
 
 class SoftwarePatchStatus:
     def __init__(self, fw_query):
         self.fw_query = fw_query
-        self.state_by_patch = {}
         # a dictionary of the PerDevicePatchState
         self.state_by_device = {}
 
-    def get_perdevicestate_for_client_id(self, client_id):
+    def reset_perdevice_state(self):
+        self.state_by_device = {}
+
+    def get_perdevice_counters(self, client_id, is_update_critical):
+        return self.get_perdevice_state(client_id).get_counter(is_update_critical)
+
+    def get_perdevice_state(self, client_id):
         if client_id not in self.state_by_device:
             self.state_by_device[client_id] = PerDevicePatchState(client_id)
         return self.state_by_device.get(client_id, None)
 
-    def collect_patch_data_status(self):
-        self.state_by_patch = {}
+    def apply_assigned_counts_to_perdevice_state(self, assigned_dict, is_update_critical):
+        for cid in assigned_dict["completed"]["device_ids"]:
+            self.get_perdevice_counters(cid, is_update_critical).completed += 1
+        for cid in assigned_dict["remaining"]["device_ids"]:
+            self.get_perdevice_counters(cid, is_update_critical).remaining += 1
+        for cid in assigned_dict["assigned"]["device_ids"]:
+            self.get_perdevice_counters(cid, is_update_critical).assigned += 1
+        for cid in assigned_dict["warning"]["device_ids"]:
+            self.get_perdevice_counters(cid, is_update_critical).warning += 1
+        for cid in assigned_dict["error"]["device_ids"]:
+            self.get_perdevice_counters(cid, is_update_critical).error += 1
 
+    def collect_patch_data_status(self):
         j = self.fw_query.get_software_updates_web_ui_j()
         if j is None:
             return
@@ -49,8 +93,6 @@ class SoftwarePatchStatus:
         if "results" not in j or len(j["results"]) == 0:
             logger.info("no results for software update patch status received from FileWave server")
             return None
-
-        # here: device_id references generic_client
 
         values = [
         ]
@@ -108,21 +150,14 @@ class SoftwarePatchStatus:
                 }
             }
         }
-
-        for a SU - completed is:
-            [requested] count_requested > 0
-            unassigned_devices.count == 0
-            [critical]
-            [completed] =
-                assigned_devices.remaining == 0
-                           -or-
-                assigned_device.completed = count_requested
-
         '''
 
         columns = [
             "update_name",
             "update_id",
+            "update_pk",
+            "creation_date",
+            "age_in_days",
             "critical",
             "platform",
             "requested",
@@ -136,69 +171,123 @@ class SoftwarePatchStatus:
         ]
 
         res = j["results"]
+
+        now = datetime.datetime.now(timezone.utc)
+
+        self.reset_perdevice_state()
+
+        '''
+        IMPORTANT:
+        assigned_devices:
+        - all states EXCEPT assigned under this are mutually exclusive, count_requested is the complete total.
+        - is_completed = num_requested > 0 and num_unassigned == 0 and num_remaining == 0
+        '''
+
         for item in res:
             update_id = item['update_id']
-            self.state_by_patch[update_id] = item
-
+            update_pk = item['id']
             acc = item["assigned_devices"]
-
             update_name = item["name"]
+            creation_date = item["creation_date"]
             platform = item["platform"]
-            if platform == "macOS":
+            if platform == "macOS" or platform == "0":
                 update_name += f" ({update_id})"
 
             is_critical = item["critical"]
             num_requested = item["count_requested"]
             num_unassigned = item["unassigned_devices"]["count"]
             num_remaining = acc["remaining"]["count"]
+            num_assigned = acc["assigned"]["count"]
+            num_completed = acc["completed"]["count"]
+            num_warning = acc["warning"]["count"]
+            num_error = acc["error"]["count"]
             is_completed = num_requested > 0 and num_unassigned == 0 and num_remaining == 0
+
+            self.apply_assigned_counts_to_perdevice_state(acc, is_critical)
+
+            age_in_days = 99
+            if creation_date is not None:
+                # "creation_date": "2018-07-10T21:00:05+02:00"
+                date_value = datetime.datetime.strptime(creation_date, '%Y-%m-%dT%H:%M:%S%z')
+                delta = now - date_value
+                age_in_days = delta.days
 
             values.append([
                 update_name,
                 update_id,
+                update_pk,
+                creation_date,
+                age_in_days,
                 is_critical,
                 platform,
                 num_requested,
                 num_unassigned,
-                acc["assigned"]["count"],
-                acc["completed"]["count"],
+                num_assigned,
+                num_completed,
                 num_remaining,
-                acc["warning"]["count"],
-                acc["error"]["count"],
+                num_warning,
+                num_error,
                 is_completed
             ])
 
         df = pd.DataFrame(values, columns=columns)
+
+        platform_mapping = {
+            "0": "macOS",
+            "1": "Microsoft"
+        }
+
+        # for platform/criticality
+        df_crit = df.groupby(['platform', 'critical'])
+        for key, item in df_crit:
+            platform_str = key[0]
+            if platform_str in platform_mapping:
+                platform_str = platform_mapping[platform_str]
+            is_crit = key[1]
+            total_count = item['update_id'].count()
+            software_updates_by_critical.labels(platform_str, is_crit).set(total_count)
+
+        # calculate the outstanding updates, e.g. patches with highest number of clients outstanding, which is:
+        #       unassigned + assigned + remaining
         df_not_completed = df.loc[df['is_completed'] == False]
-        per_update_totals = df_not_completed.groupby(["update_name", "update_id"], as_index=False)["unassigned"].sum()
-        for item in per_update_totals.to_numpy():
-            update_name = item[0]
-            update_id = item[1]
-            number_of = item[2]
-            software_updates_by_popularity.labels(update_name, update_id).set(number_of)
+        per_update_totals = df_not_completed.groupby(["update_name", "update_pk"], as_index=False)
+        for key, item in per_update_totals:
+            update_name = key[0]
+            update_pk = key[1]
+            num_not_started = item['unassigned'].sum()
+            num_outstanding = item['remaining'].sum()
+            num_completed = item['completed'].sum()
+            num_with_error_or_warning = item['warning'].sum() + item['error'].sum()
+            # print(f"update name: {update_name}/{update_id}, not started: {num_not_started}, in progress: {num_outstanding}, completed: {num_completed}, errors: {num_with_error_or_warning}")
+            software_updates_by_popularity.labels(update_name, update_pk, "Not Started").set(num_not_started)
+            software_updates_by_popularity.labels(update_name, update_pk, "In Progress").set(num_outstanding)
+            software_updates_by_popularity.labels(update_name, update_pk, "Completed").set(num_completed)
+            software_updates_by_popularity.labels(update_name, update_pk, "Errors/Warnings").set(num_with_error_or_warning)
+            software_updates_by_age.labels(update_name, update_pk, item['creation_date']).set(item['age_in_days'])
 
-        # number of devices using software updates, grouped by state
+        t = df.sum(0, numeric_only=True)
 
-        df_sum = df.loc[df['is_completed']]
-        sum_completed = df_sum['is_completed'].sum()
-        logger.info(f"completed: {sum_completed}")
-        software_updates_by_state.labels('Completed').set(sum_completed)
-
-        t = df_not_completed.sum(0, numeric_only=True)
-        software_updates_by_state.labels('Remaining').set(t['remaining'])
+        # total number of devices requesting software...
         software_updates_by_state.labels('Requested').set(t['requested'])
+        # total number not assigned to any device, even though its requested
         software_updates_by_state.labels('Unassigned').set(t['unassigned'])
+        # breakdown of totals for patches that have been assigned...
+        # assigned -> remaining (installing) -> completed
+        #          -> error|warning
         software_updates_by_state.labels('Assigned').set(t['assigned'])
+        software_updates_by_state.labels('Remaining').set(t['remaining'])
+        software_updates_by_state.labels('Completed').set(t['completed'])
         software_updates_by_state.labels('Warning').set(t['warning'])
         software_updates_by_state.labels('Error').set(t['error'])
+
+        self.collect_patch_data_per_device()
 
         return j
 
     def collect_patch_data_per_device(self):
-        self.state_by_device = {}
-
-        j = self.fw_query.get_software_patches_j()
+        j = self.fw_query.get_client_info_j()
         if j is None:
+            logger.warning("No info returned from the get_client_info_j query - thats not good")
             return
 
         if "values" not in j or len(j["values"]) == 0:
@@ -212,31 +301,16 @@ class SoftwarePatchStatus:
         # this is just a list of the avail patches, this data does not yet
         # tell us if the patch has been installed on the device.
         df = pd.DataFrame(j["values"], columns=j["fields"])
-        platform_mapping = {
-            "0": "Apple",
-            "1": "Microsoft"
-        }
+        ru = df.groupby(["Client_filewave_client_name", "Client_filewave_id"], as_index=False)
+        for key, item in ru:
+            client_name = key[0]
+            client_id = int(key[1])
 
-        ru = df.groupby(["Client_filewave_client_name", "Client_filewave_id", "Update_critical"], as_index=False)["Update_name"].count()
-        for i in ru.to_numpy():
-            client_name = i[0]
-            client_id = int(i[1])
-            is_crit = i[2]
-            update_count = i[3]
-            logger.info(f"patches, device: {client_name}/{client_id}, critical: {is_crit}, number of updates: {update_count}")
-            software_updates_by_device.labels(client_name, client_id, is_crit).set(update_count)
-
-            # update internal counter state.... we are tracking total number of standard/critical updates per client.
-            obj = self.get_perdevicestate_for_client_id(client_id)
+            obj = self.get_perdevice_state(client_id)
             obj.client_name = client_name
-            if is_crit:
-                obj.critical_patch_count += update_count
-            else:
-                obj.standard_patch_count += update_count
+            per_device_critical = obj.get_counter(True)
+            per_device_normal = obj.get_counter(False)
 
-        ru = df.groupby(["Update_platform", "Update_critical"], as_index=False)["Update_name"].count()
-        for i in ru.to_numpy():
-            platform_name = platform_mapping[i[0]]
-            is_crit = i[1]
-            update_count = i[2]
-            software_updates_by_platform.labels(platform_name, is_crit).set(update_count)
+            logger.info(f"patches, device: {client_name}/{client_id}, critical: {per_device_critical.total()}, normal: {per_device_normal.total()}")
+            software_updates_remaining_by_device.labels(client_name, client_id, True).set(per_device_critical.total())
+            software_updates_remaining_by_device.labels(client_name, client_id, False).set(per_device_normal.total())

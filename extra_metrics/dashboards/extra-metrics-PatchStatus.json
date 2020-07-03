@@ -117,70 +117,99 @@
   ],
   "panels": [
     {
-      "aliasColors": {
-        "Apple": "#F2CC0C",
-        "Microsoft": "#3274D9"
-      },
-      "breakPoint": "50%",
       "cacheTimeout": null,
-      "combine": {
-        "label": "Others",
-        "threshold": 0
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "description": "The total number of updates requested by all devices.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "datasource": "FileWave Prometheus",
-      "description": "Total proportion of updates by platform.",
-      "fontSize": "100%",
-      "format": "short",
       "gridPos": {
-        "h": 8,
-        "w": 7,
+        "h": 4,
+        "w": 5,
         "x": 0,
         "y": 0
       },
-      "id": 23,
+      "id": 45,
       "interval": null,
-      "legend": {
-        "percentage": true,
-        "show": true,
-        "sort": "current",
-        "sortDesc": true,
-        "values": false
-      },
-      "legendType": "Right side",
-      "links": [
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
         {
-          "targetBlank": true,
-          "title": "Go to Software Updates",
-          "url": "https://${server}/softwareupdates"
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
         }
       ],
-      "maxDataPoints": 1,
+      "maxDataPoints": 100,
       "nullPointMode": "connected",
+      "nullText": null,
       "options": {},
-      "pieType": "pie",
-      "strokeWidth": 1,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(extra_metrics_software_updates_by_platform) by (platform_name)",
+          "expr": "extra_metrics_software_updates_by_state{state=\"Requested\"}",
           "instant": true,
-          "legendFormat": "{{platform_name}}",
+          "legendFormat": "{{state}}",
           "refId": "A"
         }
       ],
+      "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Patches / Platform",
-      "type": "grafana-piechart-panel",
+      "title": "Total Updates Requested",
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
       "valueName": "current"
     },
     {
       "aliasColors": {
         "Assigned": "green",
-        "Remaining": "#4A90E2",
         "Completed": "#7ED321",
         "Error": "#E11702",
+        "Remaining": "#4A90E2",
         "Warning": "#F5A623"
-      },      
+      },
       "breakPoint": "50%",
       "cacheTimeout": null,
       "combine": {
@@ -188,13 +217,13 @@
         "threshold": 0
       },
       "datasource": "FileWave Prometheus",
-      "description": "Shows software patches grouped by state / progress",
+      "description": "Total number of in-progress updates across all devices.",
       "fontSize": "80%",
       "format": "short",
       "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 7,
+        "h": 12,
+        "w": 13,
+        "x": 5,
         "y": 0
       },
       "id": 39,
@@ -204,7 +233,7 @@
         "show": true,
         "sort": "current",
         "sortDesc": true,
-        "values": false
+        "values": true
       },
       "legendType": "Right side",
       "links": [
@@ -221,7 +250,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state!=\"Unassigned\"}",
+          "expr": "extra_metrics_software_updates_by_state{state!=\"Assigned\", state!=\"Requested\", state!=\"Unassigned\"}",
           "instant": true,
           "legendFormat": "{{state}}",
           "refId": "A"
@@ -229,18 +258,18 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "# Patches",
+      "title": "# In-Progress Status (Assigned)",
       "type": "grafana-piechart-panel",
       "valueName": "current"
     },
     {
       "aliasColors": {
         "Assigned": "green",
-        "Remaining": "#4A90E2",
         "Completed": "#7ED321",
         "Error": "#E11702",
+        "Remaining": "#4A90E2",
         "Warning": "#F5A623"
-      }, 
+      },
       "bars": false,
       "dashLength": 10,
       "dashes": false,
@@ -250,8 +279,8 @@
       "fillGradient": 3,
       "gridPos": {
         "h": 8,
-        "w": 9,
-        "x": 15,
+        "w": 6,
+        "x": 18,
         "y": 0
       },
       "hiddenSeries": false,
@@ -294,7 +323,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state!=\"Unassigned\"}",
+          "expr": "extra_metrics_software_updates_by_state{state!=\"Unassigned\", state!=\"Requested\"}",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
@@ -342,6 +371,266 @@
     },
     {
       "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "decimals": null,
+      "description": "The number of updates (across all devices) that are not currently planned for deployment.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 4
+      },
+      "id": 49,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "All done!",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "extra_metrics_software_updates_by_state{state=\"Unassigned\"}",
+          "instant": true,
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "1,50",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Updates Not Deployed",
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "All done!",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": null,
+      "description": "The number of updates assigned (in-progress) across all devices.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 8
+      },
+      "id": 51,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "extra_metrics_software_updates_by_state{state=\"Assigned\"}",
+          "instant": true,
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Updates Assigned",
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": null,
+      "decimals": null,
+      "description": "The total number of updates successfully deployed to devices.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 8
+      },
+      "id": 47,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "extra_metrics_software_updates_by_state{state=\"Completed\"}",
+          "instant": true,
+          "legendFormat": "{{state}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "0,1",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total Updates Completed",
+      "type": "singlestat",
+      "valueFontSize": "200%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "total"
+    },
+    {
+      "cacheTimeout": null,
       "columns": [],
       "datasource": "FileWave Prometheus",
       "description": "",
@@ -350,7 +639,7 @@
         "h": 8,
         "w": 11,
         "x": 0,
-        "y": 8
+        "y": 12
       },
       "id": 25,
       "links": [],
@@ -358,8 +647,8 @@
       "pageSize": null,
       "showHeader": true,
       "sort": {
-        "col": 3,
-        "desc": true
+        "col": null,
+        "desc": false
       },
       "styles": [
         {
@@ -469,7 +758,7 @@
       ],
       "targets": [
         {
-          "expr": "sum(extra_metrics_software_updates_by_device) by (device_name, device_id)",
+          "expr": "sum(extra_metrics_software_updates_remaining_by_device) by (device_name, device_id)",
           "format": "table",
           "instant": true,
           "legendFormat": "{{device_name}}",
@@ -491,7 +780,7 @@
         "h": 8,
         "w": 13,
         "x": 11,
-        "y": 8
+        "y": 12
       },
       "id": 43,
       "links": [
@@ -527,7 +816,7 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "fw_id",
+          "pattern": "update_id",
           "thresholds": [],
           "type": "hidden",
           "unit": "short"
@@ -579,13 +868,13 @@
           "decimals": 2,
           "pattern": "/.*/",
           "thresholds": [],
-          "type": "number",
+          "type": "string",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "expr": "topk(10, sum(extra_metrics_software_updates_by_update) by (update_name, fw_id))",
+          "expr": "topk(10, sum(extra_metrics_software_updates_by_popularity{state!=\"Completed\"}) by (update_name, update_id))",
           "format": "table",
           "instant": true,
           "legendFormat": "{{update_name}}",
@@ -620,7 +909,7 @@
         "h": 8,
         "w": 11,
         "x": 0,
-        "y": 16
+        "y": 20
       },
       "id": 41,
       "interval": null,
@@ -655,7 +944,7 @@
     {
       "cacheTimeout": null,
       "colorBackground": false,
-      "colorValue": false,
+      "colorValue": true,
       "colors": [
         "#299c46",
         "rgba(237, 129, 40, 0.89)",
@@ -675,7 +964,7 @@
         "h": 5,
         "w": 4,
         "x": 11,
-        "y": 16
+        "y": 20
       },
       "id": 19,
       "interval": null,
@@ -723,13 +1012,13 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(extra_metrics_software_updates_by_device{is_update_critical=\"True\"})",
+          "expr": "sum(extra_metrics_software_updates_by_critical{is_critical=\"True\"})",
           "format": "time_series",
-          "instant": false,
+          "instant": true,
           "refId": "A"
         }
       ],
-      "thresholds": "",
+      "thresholds": "0,1",
       "timeFrom": null,
       "timeShift": null,
       "title": "Total Critical Updates",
@@ -738,7 +1027,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "N/A",
+          "text": "None",
           "value": "null"
         }
       ],
@@ -765,9 +1054,9 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 4,
+        "w": 5,
         "x": 15,
-        "y": 16
+        "y": 20
       },
       "id": 32,
       "interval": null,
@@ -815,9 +1104,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(extra_metrics_software_updates_by_device{is_update_critical=\"False\"})",
+          "expr": "sum(extra_metrics_software_updates_by_critical{is_critical=\"False\"})",
           "format": "time_series",
-          "instant": false,
+          "instant": true,
           "refId": "A"
         }
       ],
@@ -830,7 +1119,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "N/A",
+          "text": "None",
           "value": "null"
         }
       ],
@@ -839,14 +1128,16 @@
     {
       "cacheTimeout": null,
       "colorBackground": false,
-      "colorValue": false,
+      "colorPostfix": false,
+      "colorValue": true,
       "colors": [
         "#299c46",
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
       "datasource": "FileWave Prometheus",
-      "description": "Shows the number of devices with pending updates (scope of the required updates)",
+      "decimals": null,
+      "description": "Shows the number of devices affected by the outstanding or in-progress updates.",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -858,11 +1149,12 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 19,
-        "y": 16
+        "x": 20,
+        "y": 20
       },
       "id": 27,
       "interval": null,
+      "links": [],
       "mappingType": 1,
       "mappingTypes": [
         {
@@ -900,12 +1192,12 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(extra_metrics_software_updates_by_device)",
+          "expr": "count(software_updates_remaining_by_device)",
           "instant": false,
           "refId": "A"
         }
       ],
-      "thresholds": "",
+      "thresholds": "0",
       "timeFrom": null,
       "timeShift": null,
       "title": "Devices Affected",
@@ -914,7 +1206,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "N/A",
+          "text": "None",
           "value": "null"
         }
       ],

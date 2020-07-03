@@ -13,22 +13,6 @@ from extra_metrics.fwrest import FWRestQuery
 from extra_metrics.fw_zmq_eventsub import ZMQConnector
 from extra_metrics.config import ExtraMetricsConfiguration, read_config_helper
 
-# FIX: bad data in compliance causes the routines to crash
-
-# FIX: bad data in the platform metadata causes the routines to crash
-
-# DONE: upgrade the pie chart plugin in on-box upgrade/install 
-
-# DONE: link to devices affected in the dashboard is wrong; we can fix that!  https://${server}/reports/46/details/
-
-# DONE: make it work on Mac too
-
-# DONE: add mtail for scraping existing postgres logs for queries to get a list of the slow ones.
-
-# DONE: I really need a way to validate the dashboard files contain the right keys, this is critical for sane deployment
-
-# IDEAS: if the configuration of the FW server changes, how does this product keep up?
-
 # TODO: to make associations clickable, direct users into the extra-metrics program, have that inject a real FW query on the fly and then redirect to that.
 
 # TODO: mock the fwrestquery API itself, to prove that all methods produce the right reactions.
@@ -84,13 +68,15 @@ class MainRuntime:
 
         debug_topics = interesting_topics + [
             "/inventory/inventory_query_changed",
-            "/server/change_packets"
+            "/server/change_packets",
+            "/client/"
         ]
 
-        if topic in debug_topics:
-            pretty_print_json = json.dumps(payload, indent=4)
-            logger.info(f"topic: {topic}")
-            logger.info(f"payload: {pretty_print_json}")
+        for test_topic in debug_topics:
+            if topic.startswith(test_topic):
+                pretty_print_json = json.dumps(payload, indent=4)
+                logger.info(f"topic: {topic}")
+                logger.info(f"payload: {pretty_print_json}")
 
         if topic in interesting_topics:
             if topic == "/api/auditlog" and "Report Created" not in payload["message"]:
@@ -105,8 +91,8 @@ class MainRuntime:
         self.app_qm.collect_application_query_results()
 
         self.software_patches.collect_patch_data_status()
-        self.software_patches.collect_patch_data_per_device()
-
+        # WARNING; the per_device class relies on data collected from software updates, keep
+        # this order of execution.
         self.per_device.collect_client_data(self.software_patches)
 
         self.rerun_data_collection = False
