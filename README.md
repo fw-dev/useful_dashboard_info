@@ -47,8 +47,6 @@ Extra Metrics should be configured with an Inventory API Key in order to access 
 
 > Please create a unique access token (API Key) for the Extra Metrics module
 
-> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement (as a security measure).
-
 ## Configure Extra Metrics
 The configuration step takes care of the following automatically:
 - installation of a supervisord job to run the module
@@ -57,6 +55,8 @@ The configuration step takes care of the following automatically:
 - upgrading grafana pie chart to the latest version
 - storing the API key and DNS name
 - dynamically injecting the external DNS name into the dashboards so that links to the FileWave web UI work correctly
+
+> Note: the _extra-metrics-config_ command is part of the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement as a security measure.
 
 Use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes):
 
@@ -78,11 +78,11 @@ Use the following commands to configure the server properly (you need to re-run 
     [extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
 
 ## Restarting Services
-If this is the first time you have installed the Extra Metrics module; you will need to tell supervisord to reload its configuration and to start the extra_metrics job.
+If this is the first time you have installed the Extra Metrics module; you will need to tell supervisord to reload its configuration and to start the extra-metrics job.
 
     $ /usr/local/filewave/python/bin/supervisorctl update
 
-And you should restart Grafana to pick up the new dashboards
+And you should restart Grafana so it can import the new dashboards.
 
     $ fwcontrol dashboard restart
 
@@ -149,42 +149,7 @@ Some things to rememeber:
 
     $ pip install --upgrade --pre filewave-extra-metrics
 
-# What information is exported by Extra Metrics?
-
-## Metrics
-extra_metrics_http_request_time_taken - REST queries made by extra metrics are timed; the response time is stored in a series of buckets within this metric. 
-
-extra_metrics_application_version - a summary of how many devices are using a particular app & version
-
-extra_metrics_software_updates_by_state - buckets of all the software updates by state - the value is the number of devices in each state, this includes completed updates.  The states are:
-- Requested: total number of software updates requested (think of this as devices * updates)
-- Unassigned: total number of software updates not assigned to a device (devices * updates)
-- Assigned: the total number of updates associated / assigned to a device
-- Remaining: the total number of updates that are in-progress that have yet to be completed
-- Completed: the total number of completed updates
-- Error / Warning: the total number of errors / warnings
-
-extra_metrics_software_updates_by_critical - lists all the updates, indicating the number of normal vs critical updates currently known by the server.
-
-extra_metrics_software_updates_by_popularity - list of software updates and the number of devices still needing the update (unassigned), completed updates are not included in this count.
-
-extra_metrics_software_updates_by_age - list of software updates and their age in days, all updates including completed ones are included here.  The value of the metric is the age in days (from now).
-
-extra_metrics_software_updates_remaining_by_device - list of devices and the number of [critical] updates they have remaining to be installed, completed updates are not included in this count.
-
-extra_metrics_devices_by_checkin_days - interesting stats on a per device basis, days since checked, compliance status.
-
-extra_metrics_per_device_modelnum - provides a value of the model number per device.
-
-extra_metrics_per_device_compliance - provides a value of the compliance state per device
-
-extra_metrics_per_device_client_version - number of devices rolled up by client version
-
-extra_metrics_per_device_platform - number of devices rolled up by platform
-
-extra_metrics_per_device_tracked - number of devices being tracked
-
-extra_metrics_per_device_locked - number of devices locked
+# What dashboards are created by Extra Metrics?
 
 ## Software Patch Status
 What patches are available to be deployed?  What is already being taken care of?  How many devices are effected? 
@@ -225,6 +190,43 @@ Which clients are not checking in quickly enough?  Are all my clients using the 
 The Deployment dashboard provides sample panels showing the devices grouped by client version, as well as a bar graph showing how frequently devices are checking in. 
 
 ![Deployment](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/general-deployment.png)
+
+# What metrics are being exposed to prometheus?
+
+## Metrics
+extra_metrics_http_request_time_taken - REST queries made by extra metrics are timed; the response time is stored in a series of buckets within this metric. 
+
+extra_metrics_application_version - a summary of how many devices are using a particular app & version
+
+extra_metrics_software_updates_by_state - buckets of all the software updates by state - the value is the number of devices in each state, this includes completed updates.  The states are:
+- Requested: total number of software updates requested (think of this as devices * updates)
+- Unassigned: total number of software updates not assigned to a device (devices * updates)
+- Assigned: the total number of updates associated / assigned to a device
+- Remaining: the total number of updates that are in-progress that have yet to be completed
+- Completed: the total number of completed updates
+- Error / Warning: the total number of errors / warnings
+
+extra_metrics_software_updates_by_critical - lists all the updates, indicating the number of normal vs critical updates currently known by the server.
+
+extra_metrics_software_updates_by_popularity - list of software updates and the number of devices still needing the update (unassigned), completed updates are not included in this count.
+
+extra_metrics_software_updates_by_age - list of software updates and their age in days, all updates including completed ones are included here.  The value of the metric is the age in days (from now).
+
+extra_metrics_software_updates_remaining_by_device - list of devices and the number of [critical] updates they have remaining to be installed, completed updates are not included in this count.
+
+extra_metrics_devices_by_checkin_days - interesting stats on a per device basis, days since checked, compliance status.
+
+extra_metrics_per_device_modelnum - provides a value of the model number per device.
+
+extra_metrics_per_device_compliance - provides a value of the compliance state per device
+
+extra_metrics_per_device_client_version - number of devices rolled up by client version
+
+extra_metrics_per_device_platform - number of devices rolled up by platform
+
+extra_metrics_per_device_tracked - number of devices being tracked
+
+extra_metrics_per_device_locked - number of devices locked
 
 # Changelog
 
