@@ -128,9 +128,7 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
                 provision_launch_of_extra_metrics_on_host()
 
                 plugins = [
-                    {"command": "update", "name": "grafana-piechart-panel"},
-                    {"command": "install", "name": "michaeldmoore-multistat-panel"},
-                    {"command": "install", "name": "simpod-json-datasource"}
+                    {"command": "update", "name": "grafana-piechart-panel"}
                 ]
 
                 for plugin in plugins:

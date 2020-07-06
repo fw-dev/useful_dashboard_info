@@ -1,26 +1,22 @@
 # FileWave Extra Metrics
-The purpose of Extra Metrics is to augment a standard FileWave installation with additional metrics and dashboard capabilities. 
+The purpose of the Extra Metrics project is to augment a standard v14 FileWave installation with additional metrics and dashboard capabilities. 
 
 # Overview
-Extra Metrics provides a series of dashboards and prometheus metrics related to how your fleets deployments are progressing.  The information can be used to show "at-a-glance" insights into the software patch status, device health and user specific deployments.  In as many cases as possible the Dashboard panels are linked into the FileWave Web in some way to provide a way to "drill down" into the information. 
+Extra Metrics provides a series of dashboards and prometheus metrics related to how your fleets deployments are progressing.  The information can be used to show "at-a-glance" insights into the software patch status, device health and user specific deployments.  
 
-Features:
-* Example dashboards are included in this project; and will be installed automatically. 
-* Configuration & validation is mostly automation via the extra-metrics-config command (run as sudo please)
+In as many cases as possible the Dashboard panels are linked into the FileWave Web, making it easy to "drill down" into more detail and take action. 
 
-# Requirements
-Before you begin - it's very important to ensure that you meet the requirements for this additional module. 
-
-Minimum FileWave system requirements: 
-1. The Extra Metrics system runs only on the Linux version of FileWave (unless you configure it manually on Mac)
-1. FileWave Version 14+: Extra Metrics requires version 14 or higher of the FileWave product.  It will fail to configure on anything less.
-2. SSH: You will need SSH access to your FileWave Server.
-3. Create an API Key specifically for this module (with inventory *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
-4. Make sure your server has SSL certificates - self signed certs are not enough. 
+# Requirements / Check List
+Minimum FileWave system requirements for success are as follows: 
+1. FileWave Version 14+ - it will not work with v13
+1. Linux Server - Extra Metrics can be installed on Mac but its significantly more complex
+2. SSH Access to the FileWave Server
+3. An API Key specifically for Extra Metrics (with inventory and query *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
+4. Make sure your server has SSL certificates - self signed certs are *not* enough. 
 5. You must have an externally reachable DNS name.
 
-# Installation
-These instructions assume you will be installing Extra Metrics directly on your FileWave Server, which already has Python3.7 (or later) installed.
+# Review before beginning installation
+These instructions will have you install Extra Metrics directly on your FileWave Server within a python virtual environment.
 
 Important:
 > We *highly* recommend installing Extra Metrics into its own python virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
@@ -30,63 +26,65 @@ Important:
 > If you are unsure about the above statement - STOP - contact your FileWave SE or support.  Your FileWave Server installation can be destroyed by mis-understanding the impact of this configuration.
 
 Mac:
-> On a Mac, you must install a versio of Python that allows non-codesigned binaries to be installed into the Python environment.  
+> On a Mac, you must install a versio of Python that allows non-codesigned binaries to be installed into the Python environment.  _On a Mac server: It is not possible to use the FileWave provided version of Python to run Extra Metrics_ 
 
->_It is not possible to use the FileWave provided version of Python to run Extra Metrics_ 
+## First Time Installation 
+Log into your FileWave Server using SSH, follow along to set up the virtual environment, install the Extra Metrics package and configure it. For the purpose of these instructions we are assuming a non-root user is being used.
 
-## Installation Steps (requires SSH)
-Assuming you are already logged into your FileWave Server using SSH, follow along to set up the virtual environment, install the Extra Metrics package and configure it for use. 
-
-For the purpose of these instructions we are assuming a non-root user is being used.
+Create a virtual environment for Extra Metrics:
 
     $ /usr/local/filewave/python/bin/pyvenv $HOME/extra-metrics
     $ source $HOME/extra-metrics/bin/activate
 
-Your terminal prompt changes - the name of the virtual env should show up:
+Now install the FileWave Extra Metrics package into the virtual environment:
 
     (extra-metrics) $ pip install filewave-extra-metrics
 
-At this stage the python package for Extra Metrics is installed but not configured; before completing configuration you need an API Key (and SSL certs)    
+Extra Metrics is now downloaded but not configured; before completing configuration you need an API Key (and SSL certs)
 
 ## Create & configure an Inventory API Key
 Extra Metrics should be configured with an Inventory API Key in order to access Inventory and create the inventory groups and queries.  You will need the base64 text version of this API Key, which can be obtained from the Manage Administrators -> Application tokens dialog in the FileWave Administrator console.
 
 > Please create a unique access token (API Key) for the Extra Metrics module
 
-> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement.
+> Note: the extra-metrics-config command is created by installing the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement (as a security measure).
 
-Once you have the API key; use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes). 
+## Configure Extra Metrics
+The configuration step takes care of the following automatically:
+- installation of a supervisord job to run the module
+- installation of prometheus scrape configuration that targets the extra-metrics job
+- installation & provisioning of 3 example dashboards into grafana
+- upgrading grafana pie chart to the latest version
+- storing the API key and DNS name
+- dynamically injecting the external DNS name into the dashboards so that links to the FileWave web UI work correctly
+
+Use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes):
 
     $ export CONFIG_PATH=`which extra-metrics-config`
     $ export API_KEY='insert-your-api-key-here'
     # export DNS_NAME='dns-name-of-fw-server-here'
     $ sudo $CONFIG_PATH --api-key $API_KEY --external-dns-name $DNS_NAME
 
-You will see output similar to the following, confirming that the dashboards have been imported, YAML files written and that the configuration was successful. 
-
-```bash
-[extra-metrics] [INFO] loading the configuration from file /usr/local/etc/filewave/extra_metrics.ini
-[extra-metrics] [INFO] saved configuration to file: /usr/local/etc/filewave/extra_metrics.ini
-[extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-Applications.json
-[extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-Deployment.json
-[extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-PatchStatus.json
-[extra-metrics] [INFO]
-[extra-metrics] [INFO] Configuration Summary
-[extra-metrics] [INFO] =====================
-[extra-metrics] [INFO] API Key: eZBlNWFlNTYwLTqZZWEtNDMwYS1iNTa0LTlmZTkxODFjOdaxNH6=
-[extra-metrics] [INFO] External DNS: srv.cluster.tech
-[extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
-```
-
-## Upgrade the grafana-pie-chart plugin (this is done by extra-metrics-config for you, and it just here for reference)
-The pie chart plugin likely needs an update.  You can upgrade it to the latest version using the following command:
-
-    $ grafana-cli --pluginsDir /usr/local/filewave/instrumentation_data/grafana/plugins plugins update grafana-piechart-panel
+    [extra-metrics] [INFO] loading the configuration from file /usr/local/etc/filewave/extra_metrics.ini
+    [extra-metrics] [INFO] saved configuration to file: /usr/local/etc/filewave/extra_metrics.ini
+    [extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-Applications.json
+    [extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-Deployment.json
+    [extra-metrics] [INFO] wrote dashboard file: /usr/local/etc/filewave/grafana/provisioning/dashboards/extra-metrics-PatchStatus.json
+    [extra-metrics] [INFO]
+    [extra-metrics] [INFO] Configuration Summary
+    [extra-metrics] [INFO] =====================
+    [extra-metrics] [INFO] API Key: eZBlNWFlNTYwLTqZZWEtNDMwYS1iNTa0LTlmZTkxODFjOdaxNH6=
+    [extra-metrics] [INFO] External DNS: srv.cluster.tech
+    [extra-metrics] [INFO] detected FileWave instance running version: 14.0.0
 
 ## Restarting Services
 If this is the first time you have installed the Extra Metrics module; you will need to tell supervisord to reload its configuration and to start the extra_metrics job.
 
     $ /usr/local/filewave/python/bin/supervisorctl update
+
+And you should restart Grafana to pick up the new dashboards
+
+    $ fwcontrol dashboard restart
 
 ## Validating
 > Note: it can take a few seconds (60 or so) for the metrics to be collected by prometheus and made available.  
@@ -95,29 +93,37 @@ When you view the list of dashboards available in Grafana, you'll see 3 new ones
 
 ![New dashboards and panels injected into an installation](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/new-dashboards.png)
 
-## Upgrading
-To upgrade the Extra Metrics module; just run the install command again but include an '--upgrade' flag.  It is recommended to run the "config" portion of the setup
-again to make sure that any configuration & dashboard panel changes have been applied as well and then restart services.
+## Upgrading Extra Metrics
+To upgrade the Extra Metrics module; just run the install command again but include an '--upgrade' flag.  It is recommended to run the "config" portion of the setup again to make sure that any configuration & dashboard panel changes have been applied as well and then restart services.
 
     $ pip install --upgrade filewave-extra-metrics
     $ sudo $CONFIG_PATH 
     $ /usr/local/filewave/python/bin/supervisorctl update
     # /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
 
+### Upgrading to a Release Candidate 
+To install a release candidate, run the install command again but include the '--pre' flag. 
+
+    $ pip install --upgrade --pre filewave-extra-metrics
+    $ sudo $CONFIG_PATH 
+    $ /usr/local/filewave/python/bin/supervisorctl update
+    # /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
+
+# Misc.
+
 ## Hint: don't skip this - SSL Certs
 Make sure you have an SSL certificate, it must be valid, trusted by everyone (not just the server) and absolutely under no circumstances should it be self signed.  
 
-Just do this - you'll save yourself untold pain.  Trust me I'm still healing.
-
-Reference
-=
-Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
+Do this - you'll save yourself untold pain.  Trust me I'm still healing.
 
 # How can I be notified of updates? 
 Subscribe to this RSS feed: https://pypi.org/rss/project/filewave-extra-metrics/releases.xml
 
+### Reference
+Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
+
 # Developers
-To upload to PyPi, ensure you have the credentials in a pypi.config file (not checked into source control), then the ./rebuild_for_pypi.sh and ./upload_to_pypi.sh scripts are your friends. 
+To upload to PyPi, ensure you have the credentials in a pypi.config file (not checked into source control).  To rebuild the package use ./rebuild_for_pypi.sh, to upload the package to PyPi use ./upload_to_pypi.sh.
 
 An example pypi.config file contains: 
 
@@ -127,13 +133,67 @@ username = __token__
 password = pypi-AgEIcH.....<add your really long token here>
 ```
 
+## Versioning
+It can be very convenient to publish a release candidate to PyPi in order to make testing of the install scripts easier.  
+
+The versioning is controlled by the setup.py file.
+```python
+setuptools.setup(
+    name="filewave-extra-metrics",
+    version="1.0.36rc6"
+```
+
+Some things to rememeber: 
+1. if this is the first time you are pushing an RC - always increment the major revision first.  For example, if the current revision is 1.0.35, then you should change the version for the RC to 1.0.36rc1
+2. to upgrade installations with the currently published RC, use the following command: 
+
+    $ pip install --upgrade --pre filewave-extra-metrics
+
 # What information is exported by Extra Metrics?
 
+## Metrics
+extra_metrics_http_request_time_taken - REST queries made by extra metrics are timed; the response time is stored in a series of buckets within this metric. 
+
+extra_metrics_application_version - a summary of how many devices are using a particular app & version
+
+extra_metrics_software_updates_by_state - buckets of all the software updates by state - the value is the number of devices in each state, this includes completed updates.  The states are:
+- Requested: total number of software updates requested (think of this as devices * updates)
+- Unassigned: total number of software updates not assigned to a device (devices * updates)
+- Assigned: the total number of updates associated / assigned to a device
+- Remaining: the total number of updates that are in-progress that have yet to be completed
+- Completed: the total number of completed updates
+- Error / Warning: the total number of errors / warnings
+
+extra_metrics_software_updates_by_critical - lists all the updates, indicating the number of normal vs critical updates currently known by the server.
+
+extra_metrics_software_updates_by_popularity - list of software updates and the number of devices still needing the update (unassigned), completed updates are not included in this count.
+
+extra_metrics_software_updates_by_age - list of software updates and their age in days, all updates including completed ones are included here.  The value of the metric is the age in days (from now).
+
+extra_metrics_software_updates_remaining_by_device - list of devices and the number of [critical] updates they have remaining to be installed, completed updates are not included in this count.
+
+extra_metrics_devices_by_checkin_days - interesting stats on a per device basis, days since checked, compliance status.
+
+extra_metrics_per_device_modelnum - provides a value of the model number per device.
+
+extra_metrics_per_device_compliance - provides a value of the compliance state per device
+
+extra_metrics_per_device_client_version - number of devices rolled up by client version
+
+extra_metrics_per_device_platform - number of devices rolled up by platform
+
+extra_metrics_per_device_tracked - number of devices being tracked
+
+extra_metrics_per_device_locked - number of devices locked
+
+## Panels
+
+
 ## Software Patch Status
-The software update (patch status) of clients is calculated using software  update catalogs as well as information delivered by clients about the updates they require. 
+The software update (patch status) of clients is calculated using software update catalogs as well as information delivered by clients about the updates they require.  
 
 Panels provided:
-- A birds eye view of the entire fleet's patch status - represented via percentage numbers of patch deployment, grouped by state (success, pending installation and warning/error).  
+- total updates requestedeA birds eye view of the entire fleet's patch status - represented via percentage numbers of patch deployment, grouped by state (success, pending installation and warning/error).  
 - Numbers related to (critical) updates that are not fully deployed. 
 - Links into the FileWave web UI to make remediation or further investigation easier. 
 
@@ -147,9 +207,10 @@ Panels provided:
 # Changelog
 
 01-Jul-2020 (v36)
-- fixed: look for zmq_subscribe_curve.keypair in /usr/local/filewave/certs
-- fixed: health metrics per device now make use of feedback from software update.
-- fixed: bad data causes a crash in some of the compliance calculations.
+- fixed: look for zmq_subscribe_curve.keypair in /usr/local/filewave/certs, events are now received for both compat and secure modes of FileWave Server.
+- fixed: software update status is now driven entirely from a new web ui based endpoint which makes it possible to deliver a visualization of patch progress
+- fixed: the 'health' metrics per device now make use of feedback from software update - so the number of critical vs normal patches outstanding impacts the health calculation
+- fixed: bad/missing data caused a crash in some of the compliance calculations.
 - new: additional log messages on startup to help describe why an abort might happen (bad api keys, no data returned from health checks)
 - new: added unit tests for the software update aggregations via the web rest API
 - changed: redefined the software update metrics to distinguish between completed patches, and everything else

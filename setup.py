@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="filewave-extra-metrics",
-    version="1.0.36rc6",
+    version="1.0.36rc9",
     author="John Clayton",
     author_email="johnc@filewave.com",
     description="An additional module that exposes s/ware patching and metrics information to the built in FileWave dashboard",
