@@ -186,27 +186,45 @@ extra_metrics_per_device_tracked - number of devices being tracked
 
 extra_metrics_per_device_locked - number of devices locked
 
-
-https://github.com/johncclayton/useful_dashboard_info/blob/master/images/patching-status.png
-
-
 ## Software Patch Status
-
-![Patch Status](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/patching-status.png)
+What patches are available to be deployed?  What is already being taken care of?  How many devices are effected? 
 
 The software update (patch status) of clients is calculated using software update catalogs as well as information delivered by clients about the updates they require.  
 
-Panels provided:
-- total updates requestedeA birds eye view of the entire fleet's patch status - represented via percentage numbers of patch deployment, grouped by state (success, pending installation and warning/error).  
-- Numbers related to (critical) updates that are not fully deployed. 
-- Links into the FileWave web UI to make remediation or further investigation easier. 
+![Patch Status](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/patching-status.png)
 
 ## Device Health
 The whole fleet of devices is continuously sending data back to the FileWave Inventory system which is used to calculate device health.  
 
-Panels provided: 
-- Device health summary - a grouping of all devices by health state.  The health of a device is calculated as follows: 
- - TBD (disk space, outstanding patches)
+The health of a device is calculated using three components:
+1. Check-in days: the number of days since the device last checked into filewave
+2. Disk free space: the proportion of free disk space left on the device
+3. Patching; the number & type of patches still outstanding (based on what the client device has requested)
+
+NOTE: The dashboard exposes a single state; but in reality the device has patch, check-in and disk state.  *_The dashboard is simply exposing the WORST state overall._*
+
+### Details
+Checkin-days: If check-in days isn't known, the state is UNKNOWN.  If it's < 7 the state is OK, < 14 the state is WARNING otherwise the state is ERROR
+
+Disk space: If the disk space details are unknown the state is UNKNOWN, otherwise percentage disk space left is calculated (%left).  If %left > 20% the state is OK, if %left is < 5% the state is ERROR otherwise the state is WARNING. 
+
+Patching: If there are any critical patches outstanding (unassigned, remaining or in an error / warning state), the state is ERROR.  If there are any normal patches outstanding the state is WARNING.  If there are no patches outstanding the device state is OK. 
+
+## Applications
+What apps are up to date?  Are many people making use of older, perhaps insecure apps?  
+
+![Application Versions](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/app-versions.png)
+
+The Extra Metrics program provides sample queries for some popular apps, they are stored as inventory queries in FileWave.  
+
+If the administrator adds new queries; the Extra Metrics program will check them for required columns (app name + version) and include them automatically in this dashboard. 
+
+## Deployment
+Which clients are not checking in quickly enough?  Are all my clients using the latest version of the FileWave Client software?  How many devices are being tracked or marked as missing?  Am I exposed to security problems due to old OS versions? 
+
+The Deployment dashboard provides sample panels showing the devices grouped by client version, as well as a bar graph showing how frequently devices are checking in. 
+
+![Deployment](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/general-deployment.png)
 
 # Changelog
 

@@ -10,11 +10,11 @@ device_checkin_days = Gauge('extra_metrics_devices_by_checkin_days',
                             ["days", ])
 
 device_client_modelnumber = Gauge('extra_metrics_per_device_modelnum',
-                           'per device provides a value of the model number',
+                           'provides a value of the model number per device',
                            ["device_name"])
 
 device_client_compliance = Gauge('extra_metrics_per_device_compliance',
-                           'per device provides a value of the compliance state',
+                           'provides a value of the compliance state per device, used for device health graph',
                            ["compliance"])
 
 device_client_version = Gauge('extra_metrics_per_device_client_version',
