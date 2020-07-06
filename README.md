@@ -6,6 +6,31 @@ Extra Metrics provides a series of dashboards and prometheus metrics related to 
 
 In as many cases as possible the Dashboard panels are linked into the FileWave Web, making it easy to "drill down" into more detail and take action. 
 
+# What dashboards are created by Extra Metrics?
+
+## Software Patch Status
+What patches are available to be deployed?  What is already being taken care of?  How many devices are effected? 
+
+The software update (patch status) of clients is calculated using software update catalogs as well as information delivered by clients about the updates they require.  
+
+![Patch Status](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/patching-status.png)
+
+## Applications
+What apps are up to date?  Are many people making use of older, perhaps insecure apps?  
+
+![Application Versions](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/app-versions.png)
+
+The Extra Metrics program provides sample queries for some popular apps, they are stored as inventory queries in FileWave.  
+
+If the administrator adds new queries; the Extra Metrics program will check them for required columns (app name + version) and include them automatically in this dashboard. 
+
+## Deployment
+Which clients are not checking in quickly enough?  Are all my clients using the latest version of the FileWave Client software?  How many devices are being tracked or marked as missing?  Am I exposed to security problems due to old OS versions? 
+
+The Deployment dashboard provides sample panels showing the devices grouped by client version, as well as a bar graph showing how frequently devices are checking in. 
+
+![Deployment](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/general-deployment.png)
+
 # Requirements / Check List
 Minimum FileWave system requirements for success are as follows: 
 1. FileWave Version 14+ - it will not work with v13
@@ -116,49 +141,10 @@ Make sure you have an SSL certificate, it must be valid, trusted by everyone (no
 
 Do this - you'll save yourself untold pain.  Trust me I'm still healing.
 
-# How can I be notified of updates? 
+## How can I be notified of updates? 
 Subscribe to this RSS feed: https://pypi.org/rss/project/filewave-extra-metrics/releases.xml
 
-### Reference
-Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
-
-# Developers
-To upload to PyPi, ensure you have the credentials in a pypi.config file (not checked into source control).  To rebuild the package use ./rebuild_for_pypi.sh, to upload the package to PyPi use ./upload_to_pypi.sh.
-
-An example pypi.config file contains: 
-
-```
-[pypi]
-username = __token__
-password = pypi-AgEIcH.....<add your really long token here>
-```
-
-## Versioning
-It can be very convenient to publish a release candidate to PyPi in order to make testing of the install scripts easier.  
-
-The versioning is controlled by the setup.py file.
-```python
-setuptools.setup(
-    name="filewave-extra-metrics",
-    version="1.0.36rc6"
-```
-
-Some things to rememeber: 
-1. if this is the first time you are pushing an RC - always increment the major revision first.  For example, if the current revision is 1.0.35, then you should change the version for the RC to 1.0.36rc1
-2. to upgrade installations with the currently published RC, use the following command: 
-
-    $ pip install --upgrade --pre filewave-extra-metrics
-
-# What dashboards are created by Extra Metrics?
-
-## Software Patch Status
-What patches are available to be deployed?  What is already being taken care of?  How many devices are effected? 
-
-The software update (patch status) of clients is calculated using software update catalogs as well as information delivered by clients about the updates they require.  
-
-![Patch Status](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/patching-status.png)
-
-## Device Health
+## Device Health - how is it calculated?
 The whole fleet of devices is continuously sending data back to the FileWave Inventory system which is used to calculate device health.  
 
 The health of a device is calculated using three components:
@@ -168,28 +154,12 @@ The health of a device is calculated using three components:
 
 NOTE: The dashboard exposes a single state; but in reality the device has patch, check-in and disk state.  *_The dashboard is simply exposing the WORST state overall._*
 
-### Details
+### Device Health Details
 Checkin-days: If check-in days isn't known, the state is UNKNOWN.  If it's < 7 the state is OK, < 14 the state is WARNING otherwise the state is ERROR
 
 Disk space: If the disk space details are unknown the state is UNKNOWN, otherwise percentage disk space left is calculated (%left).  If %left > 20% the state is OK, if %left is < 5% the state is ERROR otherwise the state is WARNING. 
 
 Patching: If there are any critical patches outstanding (unassigned, remaining or in an error / warning state), the state is ERROR.  If there are any normal patches outstanding the state is WARNING.  If there are no patches outstanding the device state is OK. 
-
-## Applications
-What apps are up to date?  Are many people making use of older, perhaps insecure apps?  
-
-![Application Versions](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/app-versions.png)
-
-The Extra Metrics program provides sample queries for some popular apps, they are stored as inventory queries in FileWave.  
-
-If the administrator adds new queries; the Extra Metrics program will check them for required columns (app name + version) and include them automatically in this dashboard. 
-
-## Deployment
-Which clients are not checking in quickly enough?  Are all my clients using the latest version of the FileWave Client software?  How many devices are being tracked or marked as missing?  Am I exposed to security problems due to old OS versions? 
-
-The Deployment dashboard provides sample panels showing the devices grouped by client version, as well as a bar graph showing how frequently devices are checking in. 
-
-![Deployment](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/general-deployment.png)
 
 # What metrics are being exposed to prometheus?
 
@@ -227,6 +197,36 @@ extra_metrics_per_device_platform - number of devices rolled up by platform
 extra_metrics_per_device_tracked - number of devices being tracked
 
 extra_metrics_per_device_locked - number of devices locked
+
+### Reference
+Adjust supervisorctl to include --storage.tsdb.allow-overlapping-blocks?
+
+# Developers
+To upload to PyPi, ensure you have the credentials in a pypi.config file (not checked into source control).  To rebuild the package use ./rebuild_for_pypi.sh, to upload the package to PyPi use ./upload_to_pypi.sh.
+
+An example pypi.config file contains: 
+
+```
+[pypi]
+username = __token__
+password = pypi-AgEIcH.....<add your really long token here>
+```
+
+## Versioning
+It can be very convenient to publish a release candidate to PyPi in order to make testing of the install scripts easier.  
+
+The versioning is controlled by the setup.py file.
+```python
+setuptools.setup(
+    name="filewave-extra-metrics",
+    version="1.0.36rc6"
+```
+
+Some things to rememeber: 
+1. if this is the first time you are pushing an RC - always increment the major revision first.  For example, if the current revision is 1.0.35, then you should change the version for the RC to 1.0.36rc1
+2. to upgrade installations with the currently published RC, use the following command: 
+
+    $ pip install --upgrade --pre filewave-extra-metrics
 
 # Changelog
 
