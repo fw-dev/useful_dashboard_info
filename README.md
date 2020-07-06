@@ -22,7 +22,12 @@ What apps are up to date?  Are many people making use of older, perhaps insecure
 
 The Extra Metrics program provides sample queries for some popular apps, they are stored as inventory queries in FileWave.  
 
-If the administrator adds new queries; the Extra Metrics program will check them for required columns (app name + version) and include them automatically in this dashboard. 
+### Make your own app queries
+Extra Metrics drives its dashboard from queries in FileWave. 
+
+If you adds new queries; the Extra Metrics program will check them for required columns (app name + version) and include them automatically in this dashboard. 
+
+Just add queries into the 'Extra Metrics Queries - Apps' group; and they'll be picked up and used automatically.
 
 ## Deployment
 Which clients are not checking in quickly enough?  Are all my clients using the latest version of the FileWave Client software?  How many devices are being tracked or marked as missing?  Am I exposed to security problems due to old OS versions? 
