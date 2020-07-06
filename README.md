@@ -186,10 +186,14 @@ extra_metrics_per_device_tracked - number of devices being tracked
 
 extra_metrics_per_device_locked - number of devices locked
 
-## Panels
+
+https://github.com/johncclayton/useful_dashboard_info/blob/master/images/patching-status.png
 
 
 ## Software Patch Status
+
+![Patch Status](https://raw.githubusercontent.com/johncclayton/useful_dashboard_info/master/images/patching-status.png)
+
 The software update (patch status) of clients is calculated using software update catalogs as well as information delivered by clients about the updates they require.  
 
 Panels provided:
