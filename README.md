@@ -26,7 +26,7 @@ Important:
 > If you are unsure about the above statement - STOP - contact your FileWave SE or support.  Your FileWave Server installation can be destroyed by mis-understanding the impact of this configuration.
 
 Mac:
-> On a Mac, you must install a versio of Python that allows non-codesigned binaries to be installed into the Python environment.  _On a Mac server: It is not possible to use the FileWave provided version of Python to run Extra Metrics_ 
+> On a Mac, you must install a version of Python that allows non-codesigned binaries to be installed into the Python environment.  _On a Mac server: It is not possible to use the FileWave provided version of Python to run Extra Metrics_ 
 
 ## First Time Installation 
 Log into your FileWave Server using SSH, follow along to set up the virtual environment, install the Extra Metrics package and configure it. For the purpose of these instructions we are assuming a non-root user is being used.
