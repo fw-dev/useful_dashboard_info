@@ -427,10 +427,10 @@
     },
     {
       "aliasColors": {
-        "Less than 1 day": "green",
-        "Less than 7 days": "yellow",
         "7 - 30 days": "orange",
-        "> 30 days": "red"
+        "> 30 days": "red",
+        "Less than 1 day": "green",
+        "Less than 7 days": "yellow"
       },
       "bars": true,
       "cacheTimeout": null,
@@ -635,95 +635,6 @@
         }
       ],
       "valueName": "current"
-    },
-    {
-      "collapsed": false,
-      "datasource": "FileWave Prometheus",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 15
-      },
-      "id": 31,
-      "panels": [],
-      "title": "Important Deployments",
-      "type": "row"
-    },
-    {
-      "datasource": "FileWave Prometheus",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
-      "id": 27,
-      "maxPerRow": 3,
-      "options": {
-        "aliasColors": {
-          "COMPLETED": "#7ed321",
-          "ERROR": "#e11702",
-          "REMAINING": "#4a90e2",
-          "WARNING": "#f5a623"
-        },
-        "chartType": {
-          "label": "Doughnut",
-          "value": "doughnut"
-        },
-        "cutoutPercentage": "80",
-        "dataUnavailableMessage": "Data unavailable",
-        "format": {
-          "label": "short",
-          "value": "short"
-        },
-        "highlightEnabled": true,
-        "highlightValue": {
-          "label": "Percentage",
-          "value": "percentage"
-        },
-        "legendAlign": {
-          "label": "Center",
-          "value": "center"
-        },
-        "legendBoxWidth": "40",
-        "legendEnabled": true,
-        "legendFontSize": "12",
-        "legendPosition": {
-          "label": "Left",
-          "value": "left"
-        },
-        "legendUsePointStyle": false,
-        "linkEnabled": true,
-        "linkTargetBlank": true,
-        "linkUrl": "https://${__hostname}/associations/${__association_id}/${__status}",
-        "nullPointMode": "connected",
-        "selectedHighlight": {
-          "label": "COMPLETED",
-          "value": "COMPLETED"
-        },
-        "title": "Title",
-        "tooltipColorsEnabled": true,
-        "tooltipEnabled": true,
-        "tooltipTitle": "",
-        "valueName": "current",
-        "xPadding": 6,
-        "yPadding": 6
-      },
-      "repeat": "name",
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "expr": "filewave_associations{association_name=\"${name:raw}\"}",
-          "instant": true,
-          "legendFormat": "{{status}}",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "$name",
-      "type": "filewave-piechart-panel"
     }
   ],
   "refresh": "10s",
