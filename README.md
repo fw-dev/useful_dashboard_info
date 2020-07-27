@@ -86,11 +86,15 @@ The configuration step takes care of the following automatically:
 
 > Note: the _extra-metrics-config_ command is part of the filewave-extra-metrics package; you will need the full path to this command if you are using sudo because sudo typically drops the existing PATH statement as a security measure.
 
+> The key to running the extra-metrics-config command is that it must be run with root privs.  If you are already logged in as root you can simply do the following: 
+
+    $ extra-metrics-config -a my_base64_API_key_value -e my_filewave_server_dns_name
+
 Use the following commands to configure the server properly (you need to re-run this if the DNS name or API key changes):
 
     $ export CONFIG_PATH=`which extra-metrics-config`
     $ export API_KEY='insert-your-api-key-here'
-    # export DNS_NAME='dns-name-of-fw-server-here'
+    $ export DNS_NAME='dns-name-of-fw-server-here'
     $ sudo $CONFIG_PATH --api-key $API_KEY --external-dns-name $DNS_NAME
 
     [extra-metrics] [INFO] loading the configuration from file /usr/local/etc/filewave/extra_metrics.ini
@@ -127,7 +131,7 @@ To upgrade the Extra Metrics module; just run the install command again but incl
     $ pip install --upgrade filewave-extra-metrics
     $ sudo $CONFIG_PATH 
     $ /usr/local/filewave/python/bin/supervisorctl update
-    # /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
+    $ /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
 
 ### Upgrading to a Release Candidate 
 To install a release candidate, run the install command again but include the '--pre' flag. 
@@ -135,7 +139,7 @@ To install a release candidate, run the install command again but include the '-
     $ pip install --upgrade --pre filewave-extra-metrics
     $ sudo $CONFIG_PATH 
     $ /usr/local/filewave/python/bin/supervisorctl update
-    # /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
+    $ /usr/local/filewave/python/bin/supervisorctl restart extra_metrics
 
 # Misc.
 
