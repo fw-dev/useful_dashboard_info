@@ -6,6 +6,22 @@ from extra_metrics.softwarepatches import SoftwarePatchStatus
 from prometheus_client import REGISTRY
 
 
+class TestEval21SoftwarePatch(unittest.TestCase):
+    def setUp(self):
+        self.client_data = get_package_resource_json("extra_metrics.test", "client-software-update-testdata.json")
+        self.assertIsNotNone(self.client_data, "the constructor failed to load the client package data for testing")
+
+        self.json_data = get_package_resource_json("extra_metrics.test", "eval21_sware_data.json")
+        self.assertIsNotNone(self.json_data, "the constructor failed to load the eval21_sware_data for testing")
+        self.fw_query = FakeQueryInterface()
+
+    def test_that_software_patch_data_totals_are_correct(self):
+        self.fw_query.get_software_updates_web_ui_j = MagicMock(return_value=self.json_data)
+        self.fw_query.get_client_info_j = MagicMock(return_value=self.client_data)
+        mgr = SoftwarePatchStatus(self.fw_query)
+        mgr.collect_patch_data_status()
+
+
 class TestSoftwarePatchFetching(unittest.TestCase):
     def setUp(self):
         self.json_data = get_package_resource_json("extra_metrics.test", "software-update-testdata.json")

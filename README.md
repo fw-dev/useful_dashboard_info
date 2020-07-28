@@ -37,9 +37,9 @@ The Deployment dashboard provides sample panels showing the devices grouped by c
 # Requirements / Check List
 Minimum FileWave system requirements for success are as follows: 
 1. FileWave Version 14+ - it will not work with v13
-1. Linux Server - Extra Metrics can be installed on Mac but its significantly more complex
+1. FileWave Version 14+ must be running on a Linux Server
 2. SSH Access to the FileWave Server
-3. An API Key specifically for Extra Metrics (with inventory and query *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
+3. A base64 API Key specifically for Extra Metrics (with inventory and query *create* rights).  You will require the base64 text, this can be obtained from the Manage Administrators -> Application tokens screen.
 4. Make sure your server has SSL certificates - self signed certs are *not* enough. 
 5. You must have an externally reachable DNS name.
 
@@ -47,7 +47,7 @@ Minimum FileWave system requirements for success are as follows:
 These instructions will have you install Extra Metrics directly on your FileWave Server within a python virtual environment.
 
 Important:
-> We *highly* recommend installing Extra Metrics into its own python virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
+> We *only* recommend installing Extra Metrics into its own python virtual environment.  Doing so ensures that the introduction of this module cannot interfere with the operational integrity of your FileWave Server.  
 
 > DO NOT INSTALL EXTRA METRICS DIRECTLY INTO THE PYTHON RUNTIME ENVIRONMENT OF YOUR FILEWAVE SERVER.  
 
@@ -236,6 +236,9 @@ Some things to rememeber:
     $ pip install --upgrade --pre filewave-extra-metrics
 
 # Changelog
+
+28-Jul-2020 (v43)
+- fixed: datetime parse error in software updates due to differently formatted date data for mobile/desktops
 
 01-Jul-2020 (v36)
 - fixed: look for zmq_subscribe_curve.keypair in /usr/local/filewave/certs, events are now received for both compat and secure modes of FileWave Server.

@@ -216,8 +216,10 @@ class SoftwarePatchStatus:
 
             age_in_days = 99
             if creation_date is not None:
-                # "creation_date": "2018-07-10T21:00:05+02:00"
-                date_value = datetime.datetime.strptime(creation_date, '%Y-%m-%dT%H:%M:%S%z')
+                try:
+                    date_value = datetime.datetime.strptime(creation_date, '%Y-%m-%dT%H:%M:%S%z')
+                except ValueError:
+                    date_value = datetime.datetime.strptime(creation_date, '%Y-%m-%dT%H:%M:%S.%f%z')
                 delta = now - date_value
                 age_in_days = delta.days
 
