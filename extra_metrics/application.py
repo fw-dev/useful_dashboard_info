@@ -104,14 +104,18 @@ class ApplicationQueryManager:
     def validate_query_definitions(self):
         # ensure there is a top level query group we can place queries into...
         query_group, was_created = self.fw_query.ensure_inventory_query_group_exists("Extra Metrics Queries - Apps")
-        group_id = int(query_group['id'])
+        if query_group is not None:
+            logger.debug(f"found group: {query_group}")
+            group_id = int(query_group['id'])
 
-        # if we created this group; then pre-pop the queries with what we have in code, otherwise
-        # assume the queries inside this group are definitive
-        if was_created:
-            self.create_default_queries_in_group(group_id)
+            # if we created this group; then pre-pop the queries with what we have in code, otherwise
+            # assume the queries inside this group are definitive
+            if was_created:
+                self.create_default_queries_in_group(group_id)
 
-        self.retrieve_all_queries_in_group(group_id)
+            self.retrieve_all_queries_in_group(group_id)
+        else:
+            logger.warning("The inventory group named 'Extra Metrics Queries - Apps' could not be found - not refreshing queries")
 
     def collect_application_query_results(self):
         for q_id, q in self.app_queries.items():
