@@ -568,7 +568,8 @@
         {
           "expr": "extra_metrics_per_device_compliance",
           "legendFormat": "{{compliance}}",
-          "refId": "A"
+          "refId": "A",
+          "instant": true
         }
       ],
       "timeFrom": null,
