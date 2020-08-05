@@ -240,6 +240,7 @@ Some things to rememeber:
 05-Aug-2020 (v44)
 - fixed an issue that could result in duplicate queries being injected into the 'Extra Metrics Queries - Apps' reports group
 - added the ability to override logging (default level is now WARNING not INFO), use the env value EXTRA_METRICS_LOGLEVEL and specify DEBUG, INFO, ERROR or WARNING as appropriate.
+- fixed up the device health mapping that caused some devices to appear as "Unknown"
 
 28-Jul-2020 (v43)
 - fixed: datetime parse error in software updates due to differently formatted date data for mobile/desktops
