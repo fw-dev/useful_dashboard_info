@@ -7,6 +7,12 @@ class TestClientComplianceCase(unittest.TestCase):
         c = ClientCompliance(0, 0, 0)
         self.assertEqual(c.get_disk_compliance(), ClientCompliance.STATE_UNKNOWN)
 
+    def test_compliance_state_string_conversion_is_ok(self):
+        self.assertEqual(ClientCompliance.get_compliance_state_str(0), "Ok")
+        self.assertEqual(ClientCompliance.get_compliance_state_str(1), "Unknown")
+        self.assertEqual(ClientCompliance.get_compliance_state_str(2), "Warning")
+        self.assertEqual(ClientCompliance.get_compliance_state_str(3), "Error")
+
     def test_compliance_with_no_data(self):
         c = ClientCompliance(None, None, None)
         self.assertEqual(c.get_checkin_compliance(),

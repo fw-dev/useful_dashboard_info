@@ -65,8 +65,8 @@ class ClientCompliance:
     @staticmethod
     def get_compliance_state_str(state_value):
         mappings = {
-            0: "Unknown",
-            1: "Ok",
+            0: "Ok",
+            1: "Unknown",
             2: "Warning",
             3: "Error"
         }

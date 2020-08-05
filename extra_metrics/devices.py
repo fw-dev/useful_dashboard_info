@@ -1,7 +1,6 @@
 from prometheus_client import Gauge
 import pandas as pd
 import datetime
-from datetime import timezone
 from extra_metrics.compliance import ClientCompliance
 from extra_metrics.logs import logger
 
@@ -97,7 +96,7 @@ class PerDeviceStatus:
                 ClientCompliance.STATE_OK: 0,
                 ClientCompliance.STATE_ERROR: 0,
                 ClientCompliance.STATE_WARNING: 0,
-                ClientCompliance.STATE_UNKNOWN: 0,
+                ClientCompliance.STATE_UNKNOWN: 0
             }
 
             for v in j["values"]:
@@ -111,8 +110,11 @@ class PerDeviceStatus:
 
                 total_crit = 0
                 total_normal = 0
-
                 client_fw_id = v[Client_filewave_id]
+
+                if client_fw_id is None:
+                    logger.warning(f"one of the device records doesn't have a client_fw_id; the json data is: {v}")
+
                 if client_fw_id is not None:
                     per_device_state = soft_patches.get_perdevice_state(client_fw_id)
                     if per_device_state is not None:
@@ -131,7 +133,10 @@ class PerDeviceStatus:
                         total_normal
                     )
 
-                    device_count_by_compliance[comp_check.get_compliance_state()] += 1
+                    state = comp_check.get_compliance_state()
+                    if state == ClientCompliance.STATE_UNKNOWN:
+                        logger.debug(f"state UNKNOWN found for device details {v}, checkin compliance: {comp_check.get_checkin_compliance()}, disk compliance: {comp_check.get_checkin_compliance()}, patch compliance: {comp_check.get_patch_compliance()}")
+                    device_count_by_compliance[state] += 1
 
                 if(checkin_days <= 1):
                     buckets[0] += 1
@@ -151,4 +156,4 @@ class PerDeviceStatus:
             device_checkin_days.labels('More than 30').set(buckets[3])
 
         except AssertionError as e1:
-            print("The validation/assertions failed: %s" % (e1,))
+            logger.error("The validation/assertions failed: %s" % (e1,))
