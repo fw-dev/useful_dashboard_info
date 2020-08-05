@@ -69,6 +69,8 @@ def running_on_a_fwxserver_host(exist_func=os.path.exists):
 def install_into_environment(config_path, api_key, external_dns_name, polling_interval, skip_provisioning, verify_tls):
     init_logging()
 
+    logger.setLevel("INFO")
+
     cfg = ExtraMetricsConfiguration()
     dirname = os.path.dirname(config_path)
     if not os.path.exists(dirname):
