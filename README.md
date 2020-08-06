@@ -237,6 +237,9 @@ Some things to rememeber:
 
 # Changelog
 
+07-Aug-2020 (v45)
+- made the check-in days panel use log2 for the y-axis, smoothing out peaks in data
+
 06-Aug-2020 (v44)
 - adjusted health status such that devices that have not checked in are considered "Ok" instead of "Error"
 - fixed the client query to return all device types; not just desktop devices - which makes device counts accurate across all the client metrics.
