@@ -250,7 +250,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state!=\"Completed\", state!=\"Assigned\", state!=\"Requested\", state!=\"Unassigned\"}",
+          "expr": "extra_metrics_software_updates_by_state{state!=\"Assigned\", state!=\"Requested\"}",
           "instant": true,
           "legendFormat": "{{state}}",
           "refId": "A"
@@ -719,7 +719,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "extra_metrics_software_updates_by_state{state!=\"Unassigned\", state!=\"Requested\"}",
+          "expr": "extra_metrics_software_updates_by_state{state!=\"Assigned\", state!=\"Requested\"}",
           "legendFormat": "{{state}}",
           "refId": "A"
         }

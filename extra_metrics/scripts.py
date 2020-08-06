@@ -131,6 +131,7 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
 
                 plugins = [
                     {"command": "update", "name": "grafana-piechart-panel"}
+                    # {"command": "install", "name": "redis-datasource"}
                 ]
 
                 for plugin in plugins:

@@ -9,7 +9,8 @@ class ClientCompliance:
     STATE_WARNING = 2
     STATE_ERROR = 3
 
-    def __init__(self, total_disk, free_disk, last_checkin_days, outstanding_critical_patches=-1, outstanding_standard_patches=-1):
+    def __init__(self, last_checkin_date, total_disk, free_disk, last_checkin_days, outstanding_critical_patches=-1, outstanding_standard_patches=-1):
+        self.last_checkin_date = last_checkin_date
         self.total_disk = total_disk
         self.free_disk = free_disk
         self.last_checkin_days = last_checkin_days
@@ -57,6 +58,8 @@ class ClientCompliance:
         return space_compliance
 
     def get_compliance_state(self):
+        if self.last_checkin_date is None:
+            return ClientCompliance.STATE_OK
         checkin = self.get_checkin_compliance()
         disk = self.get_disk_compliance()
         patch = self.get_patch_compliance()

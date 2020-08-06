@@ -134,6 +134,7 @@ async def create_program_and_run_tests():
     prog = MainRuntime(logger)
     prog.init_services()
     prog.software_patches.collect_patch_data_status()
+    prog.per_device.collect_client_data(prog.software_patches)
 
 
 def run_tests():

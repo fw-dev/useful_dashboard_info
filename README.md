@@ -237,11 +237,15 @@ Some things to rememeber:
 
 # Changelog
 
-05-Aug-2020 (v44)
-- fixed an issue that could result in duplicate queries being injected into the 'Extra Metrics Queries - Apps' reports group
+06-Aug-2020 (v44)
+- adjusted health status such that devices that have not checked in are considered "Ok" instead of "Error"
+- fixed the client query to return all device types; not just desktop devices - which makes device counts accurate across all the client metrics.
+- fixed an issue that could result in duplicate queries being injected into the 'Extra Metrics Queries - Apps' reports group.
 - added the ability to override logging (default level is now WARNING not INFO), use the env value EXTRA_METRICS_LOGLEVEL and specify DEBUG, INFO, ERROR or WARNING as appropriate.
-- fixed up the device health mapping that caused some devices to appear as "Unknown"
-- adjusted the health panel to be an instant query 
+- fixed up the device health mapping that caused some devices to appear as "Unknown".
+- adjusted the health panel to be an instant query.
+- adjusted the in-progress software patches panel to show everything except requested, assigned device data - resulting in a more natural view of the progress.
+- adjusted the #patches / time panel to match the data in the in-progress software patches panel so they show data consistent with each other.
 
 28-Jul-2020 (v43)
 - fixed: datetime parse error in software updates due to differently formatted date data for mobile/desktops

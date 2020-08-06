@@ -13,12 +13,6 @@ query_client_info = '''{
                 "component": "Client",
                 "operator": "=",
                 "qualifier": null
-            },
-            {
-                "column": "filewave_client_version",
-                "component": "DesktopClient",
-                "operator": "!=",
-                "qualifier": null
             }
         ],
         "logic": "all"

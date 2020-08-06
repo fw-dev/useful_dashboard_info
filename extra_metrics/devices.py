@@ -53,14 +53,16 @@ class PerDeviceStatus:
         Client_last_check_in = 17
         DesktopClient_filewave_model_number = 18
         Client_total_disk_space = 24
+        OperatingSystem_name = 13
 
         j = self.fw_query.get_client_info_j()
 
         try:
             assert j["fields"]
-            assert j["fields"][Client_device_name] == "Client_device_name", "field 0 is expected to be the Client's name"
-            assert j["fields"][Client_last_check_in] == "Client_last_check_in", "field 17 is expected to be the Client's last check in date/time"
-            assert j["fields"][Client_filewave_id] == "Client_filewave_id", "field 10 is expected to be the Client's filewave_id"
+            assert j["fields"][Client_device_name] == "Client_device_name", f"field {Client_device_name} is expected to be the Client's name"
+            assert j["fields"][Client_last_check_in] == "Client_last_check_in", f"field {Client_last_check_in} is expected to be the Client's last check in date/time"
+            assert j["fields"][Client_filewave_id] == "Client_filewave_id", f"field {Client_filewave_id} is expected to be the Client's filewave_id"
+            assert j["fields"][OperatingSystem_name] == "OperatingSystem_name", f"field {OperatingSystem_name} is supposed to be OperatingSystem_name"
 
             buckets = [0, 0, 0, 0]
             now = datetime.datetime.now()
@@ -101,7 +103,7 @@ class PerDeviceStatus:
 
             for v in j["values"]:
                 # if there is no last check in date, we want to assume it's NEVER checked in
-                checkin_days = 99
+                checkin_days = 999
                 if v[Client_last_check_in] is not None:
                     checkin_date = datetime.datetime.strptime(
                         v[Client_last_check_in], '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -110,33 +112,44 @@ class PerDeviceStatus:
 
                 total_crit = 0
                 total_normal = 0
-                client_fw_id = v[Client_filewave_id]
 
+                # for devices with a filewave_id
+                client_fw_id = v[Client_filewave_id]
                 if client_fw_id is None:
                     logger.warning(f"one of the device records doesn't have a client_fw_id; the json data is: {v}")
-
-                if client_fw_id is not None:
+                else:
                     per_device_state = soft_patches.get_perdevice_state(client_fw_id)
                     if per_device_state is not None:
                         total_crit = per_device_state.get_counter(True).total_not_completed()
                         total_normal = per_device_state.get_counter(False).total_not_completed()
 
-                    device_client_modelnumber.labels(
-                        v[Client_device_name]
-                    ).set(v[DesktopClient_filewave_model_number] if v[DesktopClient_filewave_model_number] is not None else 0)
+                # If we have a model number, store it in the metrics
+                fw_model_number = 0
+                if v[DesktopClient_filewave_model_number] is not None:
+                    fw_model_number = v[DesktopClient_filewave_model_number]
+                device_client_modelnumber.labels(v[Client_device_name]).set(fw_model_number)
 
-                    comp_check = ClientCompliance(
-                        v[Client_total_disk_space],
-                        v[Client_free_disk_space],
-                        checkin_days,
-                        total_crit,
-                        total_normal
-                    )
+                comp_check = ClientCompliance(
+                    v[Client_last_check_in],
+                    v[Client_total_disk_space],
+                    v[Client_free_disk_space],
+                    checkin_days,
+                    total_crit,
+                    total_normal
+                )
 
-                    state = comp_check.get_compliance_state()
-                    if state == ClientCompliance.STATE_UNKNOWN:
-                        logger.debug(f"state UNKNOWN found for device details {v}, checkin compliance: {comp_check.get_checkin_compliance()}, disk compliance: {comp_check.get_checkin_compliance()}, patch compliance: {comp_check.get_patch_compliance()}")
-                    device_count_by_compliance[state] += 1
+                state = comp_check.get_compliance_state()
+                if v[OperatingSystem_name] == "Chrome OS":
+                    logger.debug(f"state {ClientCompliance.get_compliance_state_str(state)} found for name: {v[Client_device_name]},\
+last check in: {v[Client_last_check_in]},\
+total disk: {v[Client_total_disk_space]},\
+free disk: {v[Client_free_disk_space]},\
+checkin days: {checkin_days},\
+total crit/noral: {total_crit}/{total_normal},\
+checkin compliance: {comp_check.get_checkin_compliance()}, disk compliance: {comp_check.get_checkin_compliance()}, patch compliance: {comp_check.get_patch_compliance()}")
+                    logger.debug("\r\n")
+
+                device_count_by_compliance[state] += 1
 
                 if(checkin_days <= 1):
                     buckets[0] += 1
