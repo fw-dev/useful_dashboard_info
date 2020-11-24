@@ -48,7 +48,7 @@ class MainRuntime:
         read_config_helper(self.cfg)
 
         self.fw_query = FWRestQuery(
-            hostname=self.cfg.get_fw_api_server(),
+            hostname=self.cfg.get_fw_api_server_hostname(),
             api_key=self.cfg.get_fw_api_key(),
             verify_tls=self.cfg.get_verify_tls())
 
@@ -105,14 +105,17 @@ async def create_program_and_run_it():
     prog.init_services()
     start_http_server(8000)
 
-    host = prog.cfg.get_fw_api_server()
+    host = prog.cfg.get_fw_api_server_hostname()
     poll_interval = prog.cfg.get_polling_delay_seconds()
     logger.info(f"Extra Metrics - connecting to {host}, using poll interval of {poll_interval} sec")
 
-    major, minor, patch = prog.fw_query.get_current_fw_version_major_minor_patch()
-    log_config_summary(prog.cfg, major, minor, patch)
+    # fetches and stores the current server version, this is important as the REST API's depend on this
+    # information.  Prior to 14.2.0 some of the API calls were different and 14.2.0 put them all under ../api/v1/...
+    prog.fw_query.fetch_server_version()
 
-    if major is None:
+    log_config_summary(prog.cfg, prog.fw_query.major_version, prog.fw_query.minor_version, prog.fw_query.patch_version)
+
+    if prog.fw_query.major_version is None or prog.fw_query.major_version == 0:
         logger.error("Unable to reach FileWave server, aborting...")
         return
 

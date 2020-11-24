@@ -43,7 +43,7 @@ class ExtraMetricsConfiguration:
     def _set_value(self, attr_name, value):
         self.section[attr_name] = value
 
-    def get_fw_api_server(self):
+    def get_fw_api_server_hostname(self):
         return self._get_value(ExtraMetricsConfiguration.KEY_FW_SERVER_HOSTNAME)
 
     def set_fw_api_server(self, value):

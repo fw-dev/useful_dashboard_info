@@ -25,7 +25,7 @@ class TestConfiguration(unittest.TestCase):
         self.cfg.read_configuration(buf)
 
     def test_configuration_defaults(self):
-        self.assertEqual("abc", self.cfg.get_fw_api_server())
+        self.assertEqual("abc", self.cfg.get_fw_api_server_hostname())
         self.assertEqual("def", self.cfg.get_fw_api_key())
         self.assertEqual(True, self.cfg.get_verify_tls())
 
