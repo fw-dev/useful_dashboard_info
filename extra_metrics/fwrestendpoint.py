@@ -1,5 +1,6 @@
 import re
 import requests
+from .logs import logger
 
 
 class FWRestEndpoints:
@@ -10,6 +11,13 @@ class FWRestEndpoints:
         self.major_version = 0
         self.minor_version = 0
         self.patch_version = 0
+
+    def _check_status(self, r, method_name):
+        if r.status_code != 200:
+            logger.warning(f"{method_name}, status: {r.status_code}, {r}")
+            if r.status_code == 401:  # rejected; just abort
+                raise Exception(
+                    "401 not allowed - implies the API Key has been revoked; aborting")
 
     def inventory_query_str(self, additional=None):
         return 'https://' + self.hostname + ':20445/inv/api/v1/' + additional

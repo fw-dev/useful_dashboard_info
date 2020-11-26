@@ -24,13 +24,6 @@ class FWRestQuery(FWRestEndpoints):
     def __init__(self, hostname, api_key, verify_tls=True):
         super().__init__(hostname, api_key, verify_tls)
 
-    def _check_status(self, r, method_name):
-        if r.status_code != 200:
-            logger.warn(f"{method_name}, status: {r.status_code}, {r}")
-            if r.status_code == 401:  # rejected; just abort
-                raise Exception(
-                    "401 not allowed - implies the API Key has been revoked; aborting")
-
     def get_definition_for_query_id_j(self, query_id):
         r = requests.get(self.endpoint_inventory_query_definition(query_id),
                          headers=self._auth_headers(), verify=self.verify_tls)

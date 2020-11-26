@@ -1,6 +1,4 @@
 import unittest
-import unittest.mock as mock
-from unittest.mock import MagicMock
 from prometheus_client import REGISTRY
 
 from extra_metrics.test.fake_mocks import FakeQueryInterface
