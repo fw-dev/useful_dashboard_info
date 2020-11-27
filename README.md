@@ -219,6 +219,12 @@ username = __token__
 password = pypi-AgEIcH.....<add your really long token here>
 ```
 
+## Development Environment
+This project was built using Visual Studio Code.  There is a container configuration that VSC can use to bring up
+a development environment for you.   Once you load the project you should see VSC prompt you to load the project
+again but this time within the container - do that :-)
+
+
 ## Versioning
 It can be very convenient to publish a release candidate to PyPi in order to make testing of the install scripts easier.  
 
@@ -236,6 +242,13 @@ Some things to rememeber:
     $ pip install --upgrade --pre filewave-extra-metrics
 
 # Changelog
+
+26-Nov-2020 (v47)
+- greatly improved unit test coverage on fwrest.py 
+- queries the fw server to decide which URLs should be used to fetch data - this is important beginning
+  in v14.2.0 of FileWave.  The older API URLs will be removed in a later release (probably 2 or 3 releases down the road, on our new 6-weekly dev cycle)
+- fix: ensure the "Count" axis shows integral units (added decimals=0 to the axes definition)
+- fix: ensure minimum Y value for the Y-axis in the device check-in time is zero, which solves a problem with small device counts not being shown in the panel. 
 
 07-Aug-2020 (v45)
 - made the check-in days panel use log2 for the y-axis, smoothing out peaks in data

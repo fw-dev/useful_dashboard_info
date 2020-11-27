@@ -532,7 +532,7 @@
           "label": "# Devices",
           "logBase": 2,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
