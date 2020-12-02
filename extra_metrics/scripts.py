@@ -125,7 +125,7 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
                     "provisioning is requested - but I've detected you are not running as root - aborting")
 
             try:
-                provision_dashboards_into_grafana(cfg.get_fw_api_server())
+                provision_dashboards_into_grafana(cfg.get_fw_api_server_hostname())
                 provision_prometheus_scrape_configuration()
                 provision_launch_of_extra_metrics_on_host()
 
@@ -150,7 +150,7 @@ def install_into_environment(config_path, api_key, external_dns_name, polling_in
         else:
             present_warning = True
 
-    q = FWRestQuery(cfg.get_fw_api_server(), cfg.get_fw_api_key(), cfg.get_verify_tls())
+    q = FWRestQuery(cfg.get_fw_api_server_hostname(), cfg.get_fw_api_key(), cfg.get_verify_tls())
     major, minor, patch = validate_runtime_requirements(q)
     log_config_summary(cfg, major, minor, patch)
 
@@ -162,7 +162,7 @@ def log_config_summary(cfg, major, minor, patch):
     logger.info("")
     logger.info("Extra Metrics - Configuration Summary")
     logger.info("=====================================")
-    logger.info(f"External DNS     : {cfg.get_fw_api_server()}")
+    logger.info(f"External DNS     : {cfg.get_fw_api_server_hostname()}")
     logger.info(f"API Key          : {cfg.get_fw_api_key()}")
     logger.info(f"FileWave Server  : {major}.{minor}.{patch}")
     logger.info(f"Verify Certs     : {cfg.get_verify_tls()}")

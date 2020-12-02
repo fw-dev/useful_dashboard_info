@@ -321,6 +321,7 @@
       },
       "yaxes": [
         {
+          "decimals": 0,
           "format": "short",
           "label": "Count",
           "logBase": 1,

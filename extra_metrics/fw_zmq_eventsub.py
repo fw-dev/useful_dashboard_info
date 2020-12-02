@@ -8,7 +8,7 @@ from extra_metrics.logs import logger
 
 
 def get_zmq_broker_xsub_endpoint(cfg):
-    return f'tcp://{cfg.get_fw_api_server()}:20005'
+    return f'tcp://{cfg.get_fw_api_server_hostname()}:20005'
 
 
 class ZMQConnector:
