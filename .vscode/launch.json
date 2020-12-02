@@ -15,7 +15,14 @@
             "name": "Python: Extra Metrics Run",
             "type": "python",
             "request": "launch",
-            "program": "test.py",
+            "program": "extra_metrics/main.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Spike",
+            "type": "python",
+            "request": "launch",
+            "program": "extra_metrics/spike.py",
             "console": "integratedTerminal"
         }
     ]
