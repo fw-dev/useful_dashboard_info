@@ -243,6 +243,10 @@ Some things to rememeber:
 
 # Changelog
 
+09-Dec-2020 (v47rc4)
+- ensure that prometheus does not keep older label names around for the application query - the human verion of this is really:
+  just count the app versions that are current, do not count "old" app versions that no longer apply.
+
 26-Nov-2020 (v47)
 - greatly improved unit test coverage on fwrest.py 
 - queries the fw server to decide which URLs should be used to fetch data - this is important beginning

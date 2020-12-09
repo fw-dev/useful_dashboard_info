@@ -71,6 +71,10 @@ class ApplicationQueryManager:
         self.app_queries = {}
         self.results_collector = None
 
+    def __del__(self):
+        if self.results_collector is not None:
+            REGISTRY.unregister(self.results_collector)
+
     def is_query_valid(self, q_id):
         app_name = False
         app_version = False
@@ -137,9 +141,8 @@ class ApplicationQueryManager:
             logger.warning("The inventory group named 'Extra Metrics Queries - Apps' could not be found - not refreshing queries")
 
     def collect_application_query_results(self):
-        if self.results_collector is not None:
-            REGISTRY.unregister(self.results_collector)
-        self.results_collector = ApplicationResultCollector()
+        # temp - to ensure we run/collect results and only swap the collector right at the end
+        temp_collector = ApplicationResultCollector()
 
         for q_id, q in self.app_queries.items():
             r = ApplicationUsageRollup(q_id, ["Application_name", "Application_version"], "Client_device_id")
@@ -154,10 +157,16 @@ class ApplicationQueryManager:
                     version = result[1]
                     total = int(result[2])
                     logger.info(f"app query result for {name}, {version}, query_id: {r.query_id} = {total}")
-                    self.results_collector.add_result(r.query_id, name, version, total)
+                    temp_collector.add_result(r.query_id, name, version, total)
 
             except Exception as e:
                 logger.error(f"failed to do app query rollup on query id {q_id}, {e}")
                 traceback.print_exc(file=sys.stdout)
 
-        REGISTRY.register(self.results_collector)
+        # Because running the inventory queries can take a non-trivial amount of time, we must
+        # ensure that swapping the collector in the REGISTRY happens as fast as possible.
+        # Remember: start_http_server kicks off a thread that will fire independantly of this code.
+        if self.results_collector is not None:
+            REGISTRY.unregister(self.results_collector)
+        REGISTRY.register(temp_collector)
+        self.results_collector = temp_collector
