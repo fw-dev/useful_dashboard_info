@@ -1,4 +1,5 @@
-from prometheus_client import Gauge
+from prometheus_client import REGISTRY
+from prometheus_client.metrics_core import GaugeMetricFamily
 
 import traceback
 import pkg_resources
@@ -11,9 +12,25 @@ from .fwrest import http_request_time_taken
 from .logs import logger
 
 
-app_version_count = Gauge('extra_metrics_application_version',
-    'a summary of how many devices are using a particular app & version',
-    ["query_name", "application_version", "query_id"])
+class ApplicationResultCollector(object):
+    def __init__(self):
+        self.app_results = []
+
+    def add_result(self, query_id, query_name, app_version, app_total):
+        self.app_results.append({
+            "id": str(query_id),
+            "query_name": query_name,
+            "app_version": app_version,
+            "total": app_total
+        })
+
+    def collect(self):
+        gauge = GaugeMetricFamily(name="extra_metrics_application_version",
+                                  documentation='a summary of how many devices are using a particular app & version',
+                                  labels=['query_name', 'application_version', 'query_id'])
+        for item in self.app_results:
+            gauge.add_metric([item['query_name'], item['app_version'], item["id"]], item["total"])
+        yield gauge
 
 
 class ApplicationUsageRollup:
@@ -52,6 +69,11 @@ class ApplicationQueryManager:
     def __init__(self, fw_query):
         self.fw_query = fw_query
         self.app_queries = {}
+        self.results_collector = None
+
+    def __del__(self):
+        if self.results_collector is not None:
+            REGISTRY.unregister(self.results_collector)
 
     def is_query_valid(self, q_id):
         app_name = False
@@ -94,6 +116,7 @@ class ApplicationQueryManager:
         all_queries = self.fw_query.get_all_inventory_queries()
 
         self.app_queries = {}
+
         for q in all_queries:
             q_group = q["group"]
             q_id = q["id"]
@@ -118,6 +141,9 @@ class ApplicationQueryManager:
             logger.warning("The inventory group named 'Extra Metrics Queries - Apps' could not be found - not refreshing queries")
 
     def collect_application_query_results(self):
+        # temp - to ensure we run/collect results and only swap the collector right at the end
+        temp_collector = ApplicationResultCollector()
+
         for q_id, q in self.app_queries.items():
             r = ApplicationUsageRollup(q_id, ["Application_name", "Application_version"], "Client_device_id")
 
@@ -131,7 +157,16 @@ class ApplicationQueryManager:
                     version = result[1]
                     total = int(result[2])
                     logger.info(f"app query result for {name}, {version}, query_id: {r.query_id} = {total}")
-                    app_version_count.labels(name, version, r.query_id).set(total)
+                    temp_collector.add_result(r.query_id, name, version, total)
+
             except Exception as e:
                 logger.error(f"failed to do app query rollup on query id {q_id}, {e}")
                 traceback.print_exc(file=sys.stdout)
+
+        # Because running the inventory queries can take a non-trivial amount of time, we must
+        # ensure that swapping the collector in the REGISTRY happens as fast as possible.
+        # Remember: start_http_server kicks off a thread that will fire independantly of this code.
+        if self.results_collector is not None:
+            REGISTRY.unregister(self.results_collector)
+        REGISTRY.register(temp_collector)
+        self.results_collector = temp_collector

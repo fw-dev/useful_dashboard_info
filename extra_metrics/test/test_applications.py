@@ -33,6 +33,18 @@ class ExtraMetricsTestCase(unittest.TestCase):
                                                   "query_id": "105"})
         self.assertEqual(1, after)
 
+    def test_app_manager_collecting_twice_doesnt_cause_totals_to_double(self):
+        app_mgr = ApplicationQueryManager(self.fw_query)
+        app_mgr.validate_query_definitions()
+
+        app_mgr.collect_application_query_results()
+        app_mgr.collect_application_query_results()
+
+        after = REGISTRY.get_sample_value('extra_metrics_application_version',
+                                          labels={"query_name": "Adobe Acrobat Reader Win",
+                                                  "application_version": "12.1", "query_id": "101"})
+        self.assertEqual(1, after)
+
     def test_app_manager_query_validation(self):
         app_mgr = ApplicationQueryManager(self.fw_query)
         self.assertEqual(len(app_mgr.app_queries), 0)
