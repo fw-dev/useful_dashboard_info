@@ -1,1 +1,1 @@
-# :warning: Migrated to: https://gitlab.com/filewave/software/useful_dashboard_info
+# :warning: Migrated to: https://gitlab.com/fw-oss/useful_dashboard_info
